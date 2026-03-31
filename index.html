@@ -1,0 +1,1994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!--
+  ================================================================
+  KS SUMMIT CONSULTING — AI-POWERED REDESIGN
+  ================================================================
+  Epic Design Techniques Applied:
+  • 6-layer parallax depth system (depth-0 → depth-5)
+  • Word-by-word scroll lighting (hero + CTA headlines)
+  • Float loop animation on AI chatbot (depth-3 hero element)
+  • Atmospheric glow blobs (depth-1)
+  • Grid-line atmosphere (depth-2)
+  • Foreground gold particles (depth-5)
+  • Clip-path reveal on service cards (inset 0 0 100% 0 → 0)
+  • Cascading stagger on trust stats + testimonials
+  • Step connector line scrub animation
+  • Split converge text entrance
+  • Gradient shimmer on gold text
+  • Custom magnetic cursor with trail
+  • prefers-reduced-motion full compliance
+  • Mobile pointer:coarse reduced-effects detection
+  • IntersectionObserver for off-screen sections
+  • will-change GPU-safe: transform + opacity + clip-path only
+  ================================================================
+  -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Keva The Money Coach — AI-powered financial coaching for clarity, debt freedom, and generational wealth. Available 24/7.">
+  <title>Keva The Money Coach — AI-Powered Financial Clarity</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ============================================================
+       RESET + CUSTOM PROPERTIES
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-deep:        #050810;
+      --bg-card:        #0C1220;
+      --gold:           #C9A256;
+      --gold-light:     #E8C97A;
+      --gold-dim:       rgba(201, 162, 86, 0.12);
+      --gold-border:    rgba(201, 162, 86, 0.22);
+      --gold-glow:      rgba(201, 162, 86, 0.07);
+      --white:          #F8F4EE;
+      --white-60:       rgba(248, 244, 238, 0.6);
+      --white-20:       rgba(248, 244, 238, 0.2);
+      --white-08:       rgba(248, 244, 238, 0.08);
+      --green-online:   #4ade80;
+      --font-serif:     'Playfair Display', Georgia, serif;
+      --font-sans:      'Inter', system-ui, sans-serif;
+      --ease-expo:      cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-spring:    cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* ============================================================
+       MANDATORY: REDUCED MOTION
+    ============================================================ */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    /* ============================================================
+       BASE
+    ============================================================ */
+    html { scroll-behavior: smooth; font-size: 16px; }
+
+    body {
+      background: var(--bg-deep);
+      color: var(--white);
+      font-family: var(--font-sans);
+      overflow-x: hidden;
+      cursor: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    @media (pointer: coarse) { body { cursor: auto; } }
+
+    img { max-width: 100%; display: block; }
+    a { text-decoration: none; }
+    button { font-family: inherit; }
+    ul { list-style: none; }
+
+    /* ============================================================
+       CUSTOM CURSOR — depth-5 element
+    ============================================================ */
+    #cursor {
+      position: fixed;
+      width: 10px; height: 10px;
+      background: var(--gold);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      will-change: transform;
+      transition: width 0.2s, height 0.2s, background 0.2s;
+    }
+    #cursor-ring {
+      position: fixed;
+      width: 38px; height: 38px;
+      border: 1px solid var(--gold-border);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      transform: translate(-50%, -50%);
+      will-change: transform;
+      transition: width 0.3s, height 0.3s, border-color 0.3s;
+    }
+    body.cursor-hover #cursor { width: 16px; height: 16px; background: var(--gold-light); }
+    body.cursor-hover #cursor-ring { width: 52px; height: 52px; border-color: rgba(201,162,86,0.5); }
+
+    @media (pointer: coarse) { #cursor, #cursor-ring { display: none; } }
+
+    /* ============================================================
+       NAVIGATION
+    ============================================================ */
+    #nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      padding: 1.5rem 3rem;
+      display: flex; align-items: center; justify-content: space-between;
+      transition: background 0.5s ease, backdrop-filter 0.5s ease, padding 0.3s ease, border-color 0.5s ease;
+      border-bottom: 1px solid transparent;
+    }
+    #nav.scrolled {
+      background: rgba(5,8,16,0.88);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      padding: 1rem 3rem;
+      border-bottom-color: var(--gold-border);
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 0.5rem;
+      font-family: var(--font-serif);
+      font-size: 1.3rem; font-weight: 700;
+      color: var(--white); letter-spacing: -0.02em;
+    }
+    .nav-logo em { color: var(--gold); font-style: normal; }
+    .nav-logo img {
+      height: 44px; width: 44px;
+      object-fit: contain;
+      border-radius: 50%;
+      transition: transform 0.3s ease;
+    }
+    .nav-logo:hover img { transform: scale(1.06); }
+    .nav-links {
+      display: flex; align-items: center; gap: 2.5rem;
+    }
+    .nav-links a {
+      color: var(--white-60); font-size: 0.8rem; font-weight: 500;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--gold-light); }
+    .nav-book {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      border: 1px solid var(--gold);
+      color: var(--gold) !important;
+      padding: 0.55rem 1.4rem !important;
+      transition: background 0.2s ease, color 0.2s ease !important;
+    }
+    .nav-book:hover {
+      background: var(--gold) !important;
+      color: var(--bg-deep) !important;
+    }
+    @media (max-width: 860px) {
+      .nav-links { display: none; }
+      #nav { padding: 1.25rem 1.5rem; }
+      #nav.scrolled { padding: 0.9rem 1.5rem; }
+    }
+
+    /* ============================================================
+       SCENE / DEPTH LAYER SYSTEM
+    ============================================================ */
+    .scene { position: relative; overflow: hidden; }
+    .layer { position: absolute; inset: 0; }
+
+    /* ============================================================
+       HERO
+    ============================================================ */
+    #hero {
+      min-height: 100vh;
+      display: flex; align-items: center;
+      position: relative; overflow: hidden;
+    }
+
+    /* depth-0: master background */
+    #hero .d0 {
+      background:
+        radial-gradient(ellipse 90% 70% at 65% 35%, rgba(201,162,86,0.055) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 15% 90%, rgba(20,40,120,0.12) 0%, transparent 55%),
+        linear-gradient(160deg, #060912 0%, #080e1c 55%, #050810 100%);
+    }
+
+    /* depth-1: glow blobs */
+    #hero .d1 { pointer-events: none; }
+    .gblob {
+      position: absolute; border-radius: 50%;
+      filter: blur(90px); will-change: transform;
+    }
+    .gblob-1 {
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(201,162,86,0.09), transparent 70%);
+      top: -150px; right: -80px;
+      animation: bpulse 10s ease-in-out infinite;
+    }
+    .gblob-2 {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(30,60,180,0.09), transparent 70%);
+      bottom: -100px; left: -100px;
+      animation: bpulse 12s ease-in-out infinite reverse;
+    }
+    .gblob-3 {
+      width: 350px; height: 350px;
+      background: radial-gradient(circle, rgba(201,162,86,0.06), transparent 70%);
+      top: 45%; left: 42%;
+      transform: translate(-50%,-50%);
+      animation: bpulse 8s ease-in-out infinite 3s;
+    }
+    @keyframes bpulse {
+      0%,100% { opacity: 0.5; transform: scale(1); }
+      50% { opacity: 0.9; transform: scale(1.15); }
+    }
+
+    /* depth-2: grid atmosphere */
+    #hero .d2 { pointer-events: none; }
+    .hgrid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(201,162,86,0.028) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201,162,86,0.028) 1px, transparent 1px);
+      background-size: 72px 72px;
+      -webkit-mask-image: radial-gradient(ellipse 75% 75% at 50% 50%, black 30%, transparent 100%);
+      mask-image: radial-gradient(ellipse 75% 75% at 50% 50%, black 30%, transparent 100%);
+    }
+
+    /* depth-5: particles */
+    #hero .d5 { pointer-events: none; }
+    .particle {
+      position: absolute; border-radius: 50%;
+      background: var(--gold); opacity: 0;
+      will-change: transform, opacity;
+    }
+
+    /* Hero inner grid */
+    .hero-inner {
+      position: relative; z-index: 10;
+      width: 100%; max-width: 1320px; margin: 0 auto;
+      padding: 7rem 3rem 5rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem; align-items: center;
+    }
+    @media (max-width: 960px) {
+      .hero-inner {
+        grid-template-columns: 1fr;
+        gap: 3rem; padding: 6rem 1.5rem 4rem;
+      }
+      /* Center the text column when stacked */
+      .hero-text { text-align: center; }
+      .hero-eyebrow { justify-content: center; }
+      .hero-p { margin-left: auto; margin-right: auto; }
+      .hero-btns { justify-content: center; }
+    }
+    @media (max-width: 600px) {
+      .hero-inner { padding: 5.5rem 1.25rem 3rem; gap: 2rem; }
+      .hero-p { font-size: 0.975rem; max-width: 100%; }
+    }
+    @media (max-width: 400px) {
+      .hero-inner { padding: 5rem 1rem 2.5rem; }
+    }
+
+    /* depth-4: text */
+    .hero-text { position: relative; z-index: 4; }
+
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 0.6rem;
+      color: var(--gold); font-size: 0.72rem; font-weight: 600;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      margin-bottom: 1.75rem;
+      opacity: 0; transform: translateY(16px);
+    }
+    .hero-eyebrow span {
+      display: block; width: 32px; height: 1px; background: var(--gold);
+    }
+    .hero-eyebrow .dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--gold); display: block;
+      animation: dotPulse 2s ease-in-out infinite;
+    }
+    @keyframes dotPulse {
+      0%,100% { opacity:1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.7); }
+    }
+
+    .hero-h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.8rem, 7.5vw, 5.2rem);
+      font-weight: 900; line-height: 1.04;
+      letter-spacing: -0.025em; margin-bottom: 1.5rem;
+    }
+    .hero-h1 .w {
+      display: inline-block;
+      opacity: 0; transform: translateY(70px);
+      margin-right: 0.22em;
+    }
+    .hero-h1 .w.g { color: var(--gold); }
+
+    .hero-p {
+      font-size: 1.08rem; color: var(--white-60); line-height: 1.75;
+      max-width: 460px; margin-bottom: 2.5rem;
+      opacity: 0; transform: translateY(20px);
+    }
+
+    .hero-btns {
+      display: flex; gap: 1rem; flex-wrap: wrap;
+      opacity: 0; transform: translateY(20px);
+    }
+
+    /* ---- Buttons ---- */
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      font-family: var(--font-sans); font-size: 0.875rem; font-weight: 600;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      padding: 0.95rem 2rem; cursor: pointer; border: none;
+      position: relative; overflow: hidden;
+      transition: transform 0.2s var(--ease-spring), box-shadow 0.2s ease;
+    }
+    .btn::after {
+      content: ''; position: absolute; inset: 0;
+      background: rgba(255,255,255,0.12);
+      transform: translateX(-100%);
+      transition: transform 0.35s ease;
+    }
+    .btn:hover::after { transform: translateX(0); }
+    .btn:hover { transform: translateY(-2px); }
+
+    .btn-gold {
+      background: var(--gold); color: var(--bg-deep);
+    }
+    .btn-gold:hover {
+      box-shadow: 0 14px 36px rgba(201,162,86,0.32);
+    }
+    .btn-outline {
+      background: transparent; color: var(--white-60);
+      border: 1px solid var(--white-20);
+    }
+    .btn-outline:hover {
+      color: var(--white); border-color: var(--white-60);
+    }
+
+    .btn-arrow {
+      width: 16px; height: 16px;
+      transition: transform 0.2s ease;
+    }
+    .btn:hover .btn-arrow { transform: translateX(3px); }
+
+    /* ============================================================
+       AI CHAT WINDOW — depth-3 (THE STAR)
+    ============================================================ */
+    .chat-wrap {
+      position: relative; z-index: 3;
+      padding-top: 22px;
+    }
+
+    .chat-float-badge {
+      position: absolute; top: -18px; right: 24px;
+      z-index: 20;
+      background: linear-gradient(135deg, var(--gold), #d4900a);
+      color: var(--bg-deep);
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; padding: 0.38rem 1.1rem;
+      border-radius: 20px;
+      box-shadow: 0 6px 20px rgba(201,162,86,0.4);
+      animation: badgeFloat 5s ease-in-out infinite;
+      white-space: nowrap;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .badge-av {
+      width: 22px; height: 22px; border-radius: 50%;
+      object-fit: cover; object-position: center top;
+      border: 1px solid rgba(5,8,16,0.3);
+      flex-shrink: 0;
+    }
+    @keyframes badgeFloat {
+      0%,100% { transform: translateY(0) rotate(-1deg); }
+      50% { transform: translateY(-6px) rotate(0.8deg); }
+    }
+
+    .chat-window {
+      background: linear-gradient(160deg, rgba(12,18,34,0.97), rgba(7,11,22,0.99));
+      border: 1px solid var(--gold-border);
+      border-radius: 18px; overflow: hidden;
+      box-shadow:
+        0 0 0 1px rgba(201,162,86,0.06),
+        0 50px 100px rgba(0,0,0,0.7),
+        0 0 80px rgba(201,162,86,0.04);
+      animation: chatFloat 8s ease-in-out infinite;
+      opacity: 0; transform: translateY(35px) scale(0.96);
+      max-width: 510px; margin: 0 auto;
+      will-change: transform;
+    }
+    @keyframes chatFloat {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-14px); }
+    }
+
+    /* Chat Header */
+    .chat-head {
+      display: flex; align-items: center; gap: 0.9rem;
+      padding: 1.1rem 1.4rem;
+      border-bottom: 1px solid var(--gold-border);
+      background: rgba(201,162,86,0.025);
+    }
+    .chat-av {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), #e8a020);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; flex-shrink: 0;
+      box-shadow: 0 0 20px rgba(201,162,86,0.3);
+    }
+    .chat-head-info { flex: 1; }
+    .chat-head-name {
+      font-size: 0.875rem; font-weight: 600; color: var(--white);
+    }
+    .chat-head-status {
+      display: flex; align-items: center; gap: 0.35rem;
+      font-size: 0.7rem; color: var(--green-online); margin-top: 2px;
+    }
+    .sdot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--green-online);
+      animation: sdotPulse 2s ease-in-out infinite;
+    }
+    @keyframes sdotPulse { 0%,100%{opacity:1}50%{opacity:0.3} }
+    .chat-head-tag {
+      font-size: 0.65rem; color: var(--gold); font-weight: 600;
+      border: 1px solid var(--gold-border);
+      padding: 0.25rem 0.65rem; border-radius: 10px;
+      background: var(--gold-dim);
+    }
+
+    /* Chat Messages */
+    .chat-msgs {
+      padding: 1.25rem; display: flex; flex-direction: column; gap: 1.1rem;
+      min-height: 295px; max-height: 295px;
+      overflow-y: auto; scrollbar-width: none;
+    }
+    .chat-msgs::-webkit-scrollbar { display: none; }
+
+    .cmsg {
+      display: flex; gap: 0.55rem; max-width: 87%;
+      opacity: 0; transform: translateY(10px);
+    }
+    .cmsg.u { align-self: flex-end; flex-direction: row-reverse; }
+
+    .mbubble {
+      padding: 0.8rem 1.05rem;
+      font-size: 0.825rem; line-height: 1.58;
+    }
+    .cmsg.ai .mbubble {
+      background: rgba(201,162,86,0.07);
+      border: 1px solid rgba(201,162,86,0.14);
+      border-radius: 4px 14px 14px 14px;
+      color: var(--white);
+    }
+    .cmsg.u .mbubble {
+      background: var(--gold);
+      border-radius: 14px 4px 14px 14px;
+      color: var(--bg-deep); font-weight: 500;
+    }
+    .mav {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), #d4900a);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; flex-shrink: 0; align-self: flex-end;
+    }
+    .mav.u {
+      background: var(--white-08);
+      border: 1px solid var(--white-20);
+    }
+
+    /* Typing indicator */
+    .typing-msg {
+      display: flex; gap: 0.55rem; max-width: 87%;
+    }
+    .typing-bubbles {
+      background: rgba(201,162,86,0.07);
+      border: 1px solid rgba(201,162,86,0.14);
+      border-radius: 4px 14px 14px 14px;
+      padding: 0.9rem 1.1rem;
+      display: flex; gap: 5px; align-items: center;
+    }
+    .tdot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--gold); opacity: 0.4;
+      animation: tBounce 1.3s ease-in-out infinite;
+    }
+    .tdot:nth-child(2) { animation-delay: 0.18s; }
+    .tdot:nth-child(3) { animation-delay: 0.36s; }
+    @keyframes tBounce {
+      0%,60%,100% { transform: translateY(0); opacity: 0.35; }
+      30% { transform: translateY(-7px); opacity: 1; }
+    }
+
+    /* Suggestions */
+    .chat-chips {
+      display: flex; gap: 0.5rem; flex-wrap: wrap;
+      padding: 0 1.25rem 1.1rem;
+    }
+    .chip {
+      background: var(--white-08); border: 1px solid var(--gold-border);
+      border-radius: 20px; padding: 0.35rem 0.8rem;
+      font-size: 0.7rem; color: var(--gold); cursor: pointer;
+      transition: background 0.2s, color 0.2s; white-space: nowrap;
+      font-family: var(--font-sans);
+    }
+    .chip:hover { background: var(--gold-dim); color: var(--gold-light); }
+
+    /* Input area */
+    .chat-bar {
+      padding: 1rem 1.25rem;
+      border-top: 1px solid var(--gold-border);
+      display: flex; gap: 0.75rem; align-items: center;
+      background: rgba(5,8,16,0.6);
+    }
+    .chat-inp {
+      flex: 1;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px; padding: 0.65rem 1rem;
+      color: var(--white); font-size: 0.825rem;
+      font-family: var(--font-sans); outline: none;
+      transition: border-color 0.2s;
+    }
+    .chat-inp::placeholder { color: rgba(255,255,255,0.28); }
+    .chat-inp:focus { border-color: var(--gold-border); }
+
+    .chat-send-btn {
+      width: 38px; height: 38px; background: var(--gold); border: none;
+      border-radius: 10px; cursor: pointer; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, transform 0.15s var(--ease-spring);
+    }
+    .chat-send-btn:hover { background: var(--gold-light); transform: scale(1.06); }
+    .chat-send-btn svg { width: 15px; height: 15px; fill: var(--bg-deep); }
+
+    /* Scroll Indicator */
+    .scroll-ind {
+      position: absolute; bottom: 2.5rem; left: 50%;
+      transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+      opacity: 0; animation: scrollFade 4s ease-in-out infinite 2.5s;
+    }
+    @keyframes scrollFade {
+      0%,100%{opacity:0;transform:translateX(-50%) translateY(0)}
+      30%,70%{opacity:0.45;transform:translateX(-50%) translateY(0)}
+      60%{opacity:0.45;transform:translateX(-50%) translateY(6px)}
+    }
+    .scroll-line { width:1px; height:42px; background:linear-gradient(180deg,var(--gold),transparent); }
+    .scroll-lbl { font-size:0.6rem; color:var(--white-60); letter-spacing:.15em; text-transform:uppercase; }
+
+    /* ============================================================
+       TRUST BAR
+    ============================================================ */
+    #trust {
+      border-top: 1px solid var(--gold-border);
+      border-bottom: 1px solid var(--gold-border);
+      background: rgba(201,162,86,0.018);
+      padding: 1.75rem 3rem;
+    }
+    .trust-inner {
+      max-width: 1320px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: center;
+      gap: 4.5rem; flex-wrap: wrap;
+    }
+    .tstat { text-align: center; opacity: 0; transform: translateY(14px); }
+    .tnum {
+      font-family: var(--font-serif);
+      font-size: 1.9rem; font-weight: 700;
+      color: var(--gold); line-height: 1; display: block;
+    }
+    .tlbl {
+      font-size: 0.7rem; color: var(--white-60);
+      letter-spacing: 0.1em; text-transform: uppercase; margin-top: 3px;
+    }
+    .tdiv { width: 1px; height: 44px; background: var(--gold-border); }
+    @media (max-width: 600px) { .tdiv { display:none; } .trust-inner { gap: 2rem; } }
+
+    /* ============================================================
+       SHARED SECTION STYLES
+    ============================================================ */
+    .sw { max-width: 1320px; margin: 0 auto; padding: 0 3rem; }
+    @media (max-width: 768px) { .sw { padding: 0 1.5rem; } }
+
+    .slabel {
+      display: inline-flex; align-items: center; gap: 0.75rem;
+      color: var(--gold); font-size: 0.68rem; font-weight: 600;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      margin-bottom: 1rem;
+      opacity: 0; transform: translateX(-20px);
+    }
+    .slabel::after {
+      content: ''; width: 50px; height: 1px; background: var(--gold);
+    }
+
+    .stitle {
+      font-family: var(--font-serif);
+      font-size: clamp(1.9rem, 3.2vw, 3.2rem);
+      font-weight: 700; line-height: 1.13;
+      letter-spacing: -0.02em; margin-bottom: 1rem;
+    }
+    .stitle .line { display: block; opacity: 0; transform: translateY(52px); }
+    .stitle .g { color: var(--gold); }
+
+    .sdesc {
+      font-size: 0.975rem; color: var(--white-60); line-height: 1.8;
+      max-width: 560px;
+      opacity: 0; transform: translateY(18px);
+    }
+
+    /* ============================================================
+       SERVICES
+    ============================================================ */
+    #services {
+      padding: 8rem 0;
+      position: relative;
+    }
+    #services::before {
+      content: ''; position: absolute; top:0; left:0; right:0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold-border), transparent);
+    }
+
+    .svc-header { margin-bottom: 4rem; }
+
+    .svc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .scard {
+      background: linear-gradient(145deg, rgba(12,18,34,0.82), rgba(7,11,22,0.96));
+      border: 1px solid var(--gold-border);
+      border-radius: 14px; padding: 2.1rem;
+      position: relative; overflow: hidden;
+      clip-path: inset(0 0 100% 0);
+      transition: border-color 0.3s, transform 0.3s var(--ease-spring), box-shadow 0.3s;
+      cursor: default;
+    }
+    .scard::before {
+      content: ''; position: absolute; top:0;left:0;right:0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--gold), var(--gold-light));
+      transform: scaleX(0); transform-origin: left;
+      transition: transform 0.4s ease;
+    }
+    .scard:hover {
+      border-color: rgba(201,162,86,0.42);
+      transform: translateY(-5px);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.45), 0 0 40px rgba(201,162,86,0.05);
+    }
+    .scard:hover::before { transform: scaleX(1); }
+
+    .sicon {
+      width: 50px; height: 50px;
+      background: var(--gold-dim); border: 1px solid var(--gold-border);
+      border-radius: 12px; display: flex; align-items: center;
+      justify-content: center; font-size: 1.3rem; margin-bottom: 1.35rem;
+    }
+    .sname {
+      font-family: var(--font-serif);
+      font-size: 1.18rem; font-weight: 600; color: var(--white);
+      margin-bottom: 0.6rem;
+    }
+    .sdesc-card {
+      font-size: 0.865rem; color: var(--white-60);
+      line-height: 1.68; margin-bottom: 1.35rem;
+    }
+    .sask {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      color: var(--gold); font-size: 0.78rem; font-weight: 600;
+      cursor: pointer; background: none; border: none; padding: 0;
+      font-family: var(--font-sans);
+      transition: gap 0.2s, color 0.2s;
+    }
+    .sask:hover { gap: 0.65rem; color: var(--gold-light); }
+
+    /* ============================================================
+       HOW IT WORKS
+    ============================================================ */
+    #how {
+      padding: 8rem 0;
+      background: radial-gradient(ellipse 80% 50% at 50% 50%, rgba(201,162,86,0.025) 0%, transparent 70%);
+    }
+    #how .stitle, #how .slabel { display: flex; justify-content: center; }
+    #how .slabel { margin-left: auto; margin-right: auto; }
+    .how-head { text-align: center; margin-bottom: 5rem; }
+
+    .steps-wrap {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 0; position: relative;
+    }
+    @media (max-width: 768px) {
+      .steps-wrap { grid-template-columns: 1fr; gap: 2.5rem; }
+    }
+
+    .step-line {
+      position: absolute; top: 27px;
+      left: calc(16.66% + 28px); right: calc(16.66% + 28px);
+      height: 1px;
+      background: linear-gradient(90deg, var(--gold), rgba(201,162,86,0.3), var(--gold));
+      transform: scaleX(0); transform-origin: left;
+      will-change: transform;
+    }
+    @media (max-width:768px) { .step-line { display: none; } }
+
+    .step {
+      padding: 0 2.5rem; text-align: center;
+      opacity: 0; transform: translateY(30px);
+    }
+    .step-n {
+      width: 56px; height: 56px;
+      border: 1px solid var(--gold); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-serif); font-size: 1.3rem; font-weight: 700;
+      color: var(--gold); margin: 0 auto 1.6rem;
+      position: relative; z-index: 1; background: var(--bg-deep);
+      transition: background 0.3s, color 0.3s;
+    }
+    .step:hover .step-n { background: var(--gold); color: var(--bg-deep); }
+    .step-t {
+      font-family: var(--font-serif);
+      font-size: 1.12rem; font-weight: 600; margin-bottom: 0.6rem;
+    }
+    .step-d { font-size: 0.875rem; color: var(--white-60); line-height: 1.68; }
+
+    /* ============================================================
+       ABOUT KEVA
+    ============================================================ */
+    #about {
+      padding: 8rem 0;
+      border-top: 1px solid rgba(201,162,86,0.07);
+    }
+    .about-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 7rem; align-items: center;
+    }
+    @media (max-width: 960px) { .about-grid { grid-template-columns: 1fr; gap: 3.5rem; } }
+
+    .about-vis { position: relative; opacity: 0; transform: translateX(-30px); }
+    .about-frame {
+      width: 100%; max-width: 420px;
+      aspect-ratio: 3/4;
+      border: 1px solid var(--gold-border); border-radius: 10px;
+      position: relative; overflow: hidden;
+    }
+    .about-frame::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(180deg, transparent 55%, rgba(5,8,16,0.55) 100%);
+      pointer-events: none;
+    }
+    .about-frame img {
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: center top;
+      display: block;
+      transition: transform 0.6s ease;
+    }
+    .about-frame:hover img { transform: scale(1.03); }
+    .about-badge {
+      position: absolute; bottom: -22px; right: -22px;
+      width: 124px; height: 124px;
+      border: 1px solid var(--gold-border); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      text-align: center; background: var(--bg-deep);
+      font-size: 0.68rem; color: var(--gold); font-weight: 600;
+      padding: 1.1rem; line-height: 1.45;
+    }
+
+    .about-cnt { opacity: 0; transform: translateX(30px); }
+    .about-quote {
+      border-left: 3px solid var(--gold);
+      padding-left: 1.5rem; margin: 2rem 0;
+    }
+    .aq-text {
+      font-family: var(--font-serif); font-size: 1.2rem; font-style: italic;
+      color: var(--white); line-height: 1.65; margin-bottom: 0.5rem;
+    }
+    .aq-attr { font-size: 0.78rem; color: var(--gold); font-weight: 600; letter-spacing: 0.04em; }
+    .about-p {
+      font-size: 0.95rem; color: var(--white-60); line-height: 1.82; margin-bottom: 1.4rem;
+    }
+
+    /* ============================================================
+       TESTIMONIALS
+    ============================================================ */
+    #testimonials {
+      padding: 8rem 0;
+      background: linear-gradient(180deg, transparent, rgba(201,162,86,0.018), transparent);
+    }
+    .test-head {
+      text-align: center; margin-bottom: 4.5rem;
+    }
+    .test-head .slabel { justify-content: center; }
+    .test-head .slabel::after { display: none; }
+    .test-head .sdesc { margin: 0 auto; text-align: center; }
+
+    .test-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 1.5rem;
+    }
+    .tcard {
+      background: linear-gradient(145deg, rgba(12,18,34,0.75), rgba(7,11,22,0.9));
+      border: 1px solid rgba(201,162,86,0.11);
+      border-radius: 14px; padding: 2.1rem;
+      position: relative; overflow: hidden;
+      opacity: 0; transform: translateY(30px);
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .tcard:hover {
+      border-color: var(--gold-border);
+      box-shadow: 0 12px 45px rgba(0,0,0,0.3);
+    }
+    .tcard::before {
+      content: '"'; position: absolute;
+      top: -14px; left: 18px;
+      font-family: var(--font-serif); font-size: 7rem;
+      color: rgba(201,162,86,0.05); line-height: 1; pointer-events: none;
+    }
+    .tstars { color: var(--gold); font-size: 0.72rem; letter-spacing: 2px; margin-bottom: 1rem; }
+    .ttext {
+      font-size: 0.88rem; color: var(--white);
+      line-height: 1.72; margin-bottom: 1.5rem; font-style: italic;
+    }
+    .tauthor { display: flex; align-items: center; gap: 0.8rem; }
+    .tav {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: var(--gold-dim); border: 1px solid var(--gold-border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; font-weight: 600; color: var(--gold);
+      font-family: var(--font-serif);
+    }
+    .tname { font-size: 0.875rem; font-weight: 600; color: var(--white); }
+    .tloc { font-size: 0.7rem; color: var(--white-60); margin-top: 1px; }
+
+    /* ============================================================
+       FINAL CTA
+    ============================================================ */
+    #cta {
+      padding: 9rem 0;
+      text-align: center; position: relative; overflow: hidden;
+    }
+    #cta::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse 65% 80% at 50% 50%, rgba(201,162,86,0.065) 0%, transparent 60%);
+    }
+    .cta-inner { position: relative; z-index: 1; }
+
+    .cta-eyebrow {
+      display: block; color: var(--gold); font-size: 0.7rem; font-weight: 600;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      margin-bottom: 1.75rem;
+      opacity: 0;
+    }
+    .cta-h2 {
+      font-family: var(--font-serif);
+      font-size: clamp(2.5rem, 5vw, 4.8rem);
+      font-weight: 900; line-height: 1.04; letter-spacing: -0.025em;
+      margin-bottom: 1.5rem;
+    }
+    .cta-h2 .w { display: inline-block; opacity: 0; transform: translateY(55px); margin-right: 0.24em; }
+    .cta-h2 .g { color: var(--gold); }
+
+    .cta-p {
+      font-size: 1.05rem; color: var(--white-60); line-height: 1.75;
+      max-width: 520px; margin: 0 auto 3rem;
+      opacity: 0;
+    }
+    .cta-btns {
+      display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
+      opacity: 0;
+    }
+
+    /* ============================================================
+       FOOTER
+    ============================================================ */
+    footer {
+      border-top: 1px solid rgba(201,162,86,0.1);
+      padding: 3rem;
+    }
+    .foot-inner {
+      max-width: 1320px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 1.5rem;
+    }
+    .foot-logo {
+      display: flex; align-items: center; gap: 0.6rem;
+      font-family: var(--font-serif); font-size: 1.05rem; font-weight: 700; color: var(--white);
+    }
+    .foot-logo em { color: var(--gold); font-style: normal; }
+    .foot-logo img {
+      height: 40px; width: 40px;
+      object-fit: contain; border-radius: 50%;
+      opacity: 0.85;
+    }
+    .foot-links { display: flex; gap: 2rem; }
+    .foot-links a { font-size: 0.78rem; color: var(--white-60); transition: color 0.2s; }
+    .foot-links a:hover { color: var(--gold); }
+    .foot-copy { font-size: 0.78rem; color: var(--white-60); }
+    @media (max-width: 600px) { footer { padding: 2rem 1.5rem; } }
+
+    /* ============================================================
+       MOBILE NAV — HAMBURGER + FULL-SCREEN MENU
+    ============================================================ */
+    .nav-mobile-controls {
+      display: none;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    @media (max-width: 860px) {
+      .nav-mobile-controls { display: flex; }
+    }
+
+    .nav-book-pill {
+      display: inline-flex; align-items: center;
+      border: 1px solid var(--gold); color: var(--gold);
+      font-size: 0.72rem; font-weight: 600;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      padding: 0.5rem 1rem;
+      transition: background 0.2s, color 0.2s;
+      white-space: nowrap;
+    }
+    .nav-book-pill:hover { background: var(--gold); color: var(--bg-deep); }
+
+    .nav-toggle {
+      width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 8px; background: none; border: none;
+      color: var(--white); cursor: pointer;
+      transition: background 0.15s;
+      flex-shrink: 0;
+    }
+    .nav-toggle:hover { background: var(--white-08); }
+    .nav-toggle svg { width: 20px; height: 20px; }
+
+    /* Full-screen mobile menu */
+    .nav-mobile {
+      position: fixed; inset: 0; z-index: 195;
+      background: rgba(5,8,16,0.98);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 0;
+      transform: translateX(100%);
+      transition: transform 0.4s var(--ease-expo);
+      pointer-events: none;
+    }
+    .nav-mobile.open {
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+    .nav-mobile-close {
+      position: absolute; top: 1.25rem; right: 1.25rem;
+      width: 44px; height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 10px;
+      background: var(--white-08); border: 1px solid var(--white-20);
+      color: var(--white); cursor: pointer;
+      transition: background 0.15s;
+    }
+    .nav-mobile-close:hover { background: var(--white-20); }
+    .nav-mobile-close svg { width: 18px; height: 18px; }
+
+    .nav-mobile a {
+      font-family: var(--font-serif);
+      font-size: clamp(1.75rem, 7vw, 2.5rem);
+      font-weight: 700; color: var(--white-60);
+      padding: 0.6rem 0; text-align: center;
+      transition: color 0.2s, transform 0.2s;
+      display: block; width: 100%;
+    }
+    .nav-mobile a:hover { color: var(--gold); transform: translateX(4px); }
+
+    .nav-mobile-divider {
+      width: 40px; height: 1px;
+      background: var(--gold-border);
+      margin: 1rem 0;
+    }
+    .nav-mobile-actions {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 0.75rem; margin-top: 0.5rem; width: 100%; padding: 0 2rem;
+    }
+    .nav-mobile-actions .btn {
+      width: 100%; max-width: 280px;
+      justify-content: center;
+      font-size: 0.875rem;
+    }
+
+    /* ============================================================
+       ALL MOBILE RESPONSIVE FIXES — index.html
+    ============================================================ */
+
+    /* Hero buttons: stack full-width on small mobile */
+    @media (max-width: 500px) {
+      .hero-btns { flex-direction: column; }
+      .hero-btns .btn { width: 100%; justify-content: center; }
+    }
+
+    /* Trust bar: 2×2 grid on mobile */
+    @media (max-width: 580px) {
+      #trust { padding: 1.25rem 1.5rem; }
+      .trust-inner {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem 0.5rem;
+        justify-items: center;
+      }
+      .tdiv { display: none; }
+    }
+
+    /* Section vertical padding reduced on mobile */
+    @media (max-width: 768px) {
+      #services     { padding: 4rem 0; }
+      #how          { padding: 4rem 0; }
+      #about        { padding: 4rem 0; }
+      #testimonials { padding: 4rem 0; }
+      #cta          { padding: 4.5rem 0; }
+      .svc-header   { margin-bottom: 2.25rem; }
+      .how-head     { margin-bottom: 2.5rem; }
+      .test-head    { margin-bottom: 2.5rem; }
+    }
+
+    /* Service grid: ensure minimum 1 column on tiny screens */
+    @media (max-width: 360px) {
+      .svc-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Steps: tighten padding on mobile (already 1-col stacked) */
+    @media (max-width: 768px) {
+      .step { padding: 0 0.25rem; }
+    }
+
+    /* About badge: keep within bounds on mobile */
+    @media (max-width: 960px) {
+      .about-badge {
+        width: 100px; height: 100px;
+        font-size: 0.62rem; padding: 0.85rem;
+        bottom: -14px; right: -10px;
+      }
+    }
+    @media (max-width: 500px) {
+      .about-badge {
+        width: 84px; height: 84px;
+        font-size: 0.58rem; padding: 0.7rem;
+        bottom: -10px; right: -6px;
+      }
+      .about-frame { max-width: 100%; }
+    }
+
+    /* CTA buttons: stack on mobile */
+    @media (max-width: 500px) {
+      .cta-btns { flex-direction: column; align-items: center; }
+      .cta-btns .btn {
+        width: 100% !important;
+        max-width: 320px;
+        justify-content: center;
+        padding: 1rem 1.5rem !important;
+      }
+    }
+
+    /* Footer: full stack on mobile */
+    @media (max-width: 620px) {
+      .foot-inner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+      .foot-links { gap: 1.25rem; flex-wrap: wrap; }
+    }
+
+    /* Chat window on mobile hero: reduce message area height + prevent overflow */
+    @media (max-width: 960px) {
+      .chat-window { max-width: 100%; }
+      .chat-msgs { min-height: 200px; max-height: 200px; }
+    }
+    @media (max-width: 600px) {
+      .chat-msgs { min-height: 170px; max-height: 170px; }
+      .chat-float-badge { font-size: 0.62rem; padding: 0.3rem 0.8rem; right: 12px; }
+      .badge-av { width: 18px; height: 18px; }
+      .chat-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 6px; }
+      .chat-chips::-webkit-scrollbar { display: none; }
+      .chat-inp { font-size: 0.775rem; }
+    }
+
+    /* Section wrapper tighter on very small screens */
+    @media (max-width: 380px) {
+      .sw { padding: 0 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Custom Cursor (depth-5 foreground element) -->
+<div id="cursor" aria-hidden="true"></div>
+<div id="cursor-ring" aria-hidden="true"></div>
+
+<!-- ============================================================
+     NAVIGATION
+============================================================ -->
+<nav id="nav" role="navigation" aria-label="Main navigation">
+  <a href="#" class="nav-logo" aria-label="KS Summit Consulting — Keva The Money Coach">
+    <img src="logo.webp" alt="Keva The Money Coach logo">
+  </a>
+
+  <!-- Desktop nav links -->
+  <ul class="nav-links">
+    <li><a href="#services">Services</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#about">About Keva</a></li>
+    <li><a href="#testimonials">Results</a></li>
+    <li><a href="#cta" class="nav-book">Book a Call</a></li>
+  </ul>
+
+  <!-- Mobile: CTA pill + hamburger -->
+  <div class="nav-mobile-controls">
+    <a href="chat.html" class="nav-book-pill">Chat Free</a>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Open navigation menu" aria-expanded="false" aria-controls="nav-mobile">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
+  </div>
+</nav>
+
+<!-- Full-screen mobile menu -->
+<div class="nav-mobile" id="nav-mobile" role="dialog" aria-label="Navigation menu" aria-hidden="true">
+  <button class="nav-mobile-close" id="nav-mobile-close" aria-label="Close navigation menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
+  <a href="#services" class="nav-mobile-link">Services</a>
+  <a href="#how" class="nav-mobile-link">How It Works</a>
+  <a href="#about" class="nav-mobile-link">About Keva</a>
+  <a href="#testimonials" class="nav-mobile-link">Results</a>
+  <div class="nav-mobile-divider" aria-hidden="true"></div>
+  <div class="nav-mobile-actions">
+    <a href="chat.html" class="btn btn-gold">Start Free Chat</a>
+    <a href="https://kssummitconsulting.com" class="btn btn-outline" target="_blank" rel="noopener">Book Clarity Call</a>
+  </div>
+</div>
+
+<!-- ============================================================
+     HERO SECTION
+============================================================ -->
+<section id="hero" class="scene" aria-labelledby="hero-h1">
+
+  <!-- depth-0: deep background gradient -->
+  <div class="layer d0" data-depth="0" aria-hidden="true"></div>
+
+  <!-- depth-1: atmospheric glow blobs -->
+  <div class="layer d1" data-depth="1" aria-hidden="true">
+    <div class="gblob gblob-1"></div>
+    <div class="gblob gblob-2"></div>
+    <div class="gblob gblob-3"></div>
+  </div>
+
+  <!-- depth-2: subtle grid atmosphere -->
+  <div class="layer d2" data-depth="2" aria-hidden="true">
+    <div class="hgrid"></div>
+  </div>
+
+  <!-- depth-5: floating gold particles -->
+  <div class="layer d5" data-depth="5" aria-hidden="true">
+    <div id="particles-wrap"></div>
+  </div>
+
+  <!-- Hero Content -->
+  <div class="hero-inner" id="hero-inner">
+
+    <!-- depth-4: text content -->
+    <div class="hero-text" id="hero-text" data-depth="4" style="box-sizing:border-box; width:100%; min-width:0;">
+      <div class="hero-eyebrow" id="hero-eyebrow" aria-label="AI-Powered Financial Coaching">
+        <span class="dot" aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        AI-Powered Financial Coaching
+      </div>
+
+      <h1 class="hero-h1" id="hero-h1" style="max-width:100%; word-break:break-word; overflow-wrap:break-word; box-sizing:border-box;">
+        <span class="w">Your</span>
+        <span class="w g">Wealth,</span>
+        <span class="w">Guided</span>
+        <span class="w">by</span>
+        <span class="w g">Intelligence.</span>
+      </h1>
+
+      <p class="hero-p" id="hero-p" style="box-sizing:border-box; width:100%;">
+        Meet Keva AI — your 24/7 personal financial advisor, powered by Keva's 
+        decade of coaching expertise. Ask anything. Get clarity. Build lasting wealth.
+      </p>
+
+      <div class="hero-btns" id="hero-btns">
+        <a href="chat.html" class="btn btn-gold">
+          Start Free Conversation
+          <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#about" class="btn btn-outline">
+          Meet Keva
+          <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- depth-3: AI Chat Window — THE STAR -->
+    <div class="chat-wrap" data-depth="3" id="chat-anchor" style="min-width:0; max-width:100%; box-sizing:border-box;">
+      <div class="chat-float-badge" aria-hidden="true">
+        <img src="keva_img_2.webp" alt="" class="badge-av" onerror="this.style.display='none'">
+        ✦ Powered by Keva AI
+      </div>
+
+      <div class="chat-window" role="region" aria-label="Keva AI Financial Advisor Chat">
+
+        <!-- Header -->
+        <div class="chat-head">
+          <div class="chat-av" aria-hidden="true">💰</div>
+          <div class="chat-head-info">
+            <div class="chat-head-name">Keva AI</div>
+            <div class="chat-head-status">
+              <div class="sdot" aria-hidden="true"></div>
+              Online — Ready to build your plan
+            </div>
+          </div>
+          <div class="chat-head-tag">AI</div>
+        </div>
+
+        <!-- Messages -->
+        <div class="chat-msgs" id="chat-msgs" role="list" aria-live="polite" aria-label="Chat conversation"></div>
+
+        <!-- Suggestion Chips -->
+        <div class="chat-chips" role="group" aria-label="Quick questions">
+          <button class="chip">💳 Eliminate debt</button>
+          <button class="chip">📈 Retire early</button>
+          <button class="chip">💰 Build savings</button>
+          <button class="chip">🏠 Family wealth</button>
+        </div>
+
+        <!-- Input -->
+        <div class="chat-bar">
+          <input
+            type="text"
+            class="chat-inp"
+            id="chat-input"
+            placeholder="Ask Keva AI about your finances…"
+            aria-label="Type your financial question"
+            autocomplete="off"
+          />
+          <button class="chat-send-btn" id="chat-send" aria-label="Send message">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+            </svg>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Scroll hint -->
+  <div class="scroll-ind" aria-hidden="true">
+    <div class="scroll-line"></div>
+    <span class="scroll-lbl">Scroll</span>
+  </div>
+
+</section>
+
+<!-- ============================================================
+     TRUST BAR
+============================================================ -->
+<div id="trust" role="complementary" aria-label="Key statistics">
+  <div class="trust-inner">
+    <div class="tstat"><span class="tnum">500+</span><span class="tlbl">Clients Coached</span></div>
+    <div class="tdiv" aria-hidden="true"></div>
+    <div class="tstat"><span class="tnum">10+</span><span class="tlbl">Years Experience</span></div>
+    <div class="tdiv" aria-hidden="true"></div>
+    <div class="tstat"><span class="tnum">$2M+</span><span class="tlbl">Debt Eliminated</span></div>
+    <div class="tdiv" aria-hidden="true"></div>
+    <div class="tstat"><span class="tnum">24/7</span><span class="tlbl">AI Availability</span></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SERVICES
+============================================================ -->
+<section id="services" aria-labelledby="svc-title">
+  <div class="sw">
+    <div class="svc-header">
+      <div class="slabel">What Keva AI Does</div>
+      <h2 class="stitle" id="svc-title">
+        <span class="line">Financial expertise,</span>
+        <span class="line g">instantly available.</span>
+      </h2>
+      <p class="sdesc">
+        Keva AI is trained on Keva's proven coaching methods. Ask any question — from 
+        debt strategy to generational wealth — and receive personalized, actionable 
+        guidance in seconds.
+      </p>
+    </div>
+
+    <div class="svc-grid">
+      <article class="scard" aria-label="Wealth Alignment">
+        <div class="sicon" aria-hidden="true">⚖️</div>
+        <h3 class="sname">Wealth Alignment</h3>
+        <p class="sdesc-card">Align your money strategy with your values and life vision. Set meaningful goals and choose the right tools to achieve lasting financial purpose.</p>
+        <button class="sask">Ask Keva AI <span aria-hidden="true">→</span></button>
+      </article>
+
+      <article class="scard" aria-label="Cashflow Management">
+        <div class="sicon" aria-hidden="true">💸</div>
+        <h3 class="sname">Cashflow Management</h3>
+        <p class="sdesc-card">Master your money flow without stress. Build a personalized cashflow system that plugs spending leaks and grows your financial reserve consistently.</p>
+        <button class="sask">Ask Keva AI <span aria-hidden="true">→</span></button>
+      </article>
+
+      <article class="scard" aria-label="Debt Reduction">
+        <div class="sicon" aria-hidden="true">🔓</div>
+        <h3 class="sname">Debt Reduction</h3>
+        <p class="sdesc-card">Break the debt cycle with a clear, judgment-free roadmap. Keva AI provides your personalized elimination strategy based on your exact situation.</p>
+        <button class="sask">Ask Keva AI <span aria-hidden="true">→</span></button>
+      </article>
+
+      <article class="scard" aria-label="Retirement Planning">
+        <div class="sicon" aria-hidden="true">🌅</div>
+        <h3 class="sname">Retirement Planning</h3>
+        <p class="sdesc-card">Retirement is a strategy, not an age. Learn how to use IRAs, 401(k)s, and investment accounts to create the lifestyle and freedom you deserve.</p>
+        <button class="sask">Ask Keva AI <span aria-hidden="true">→</span></button>
+      </article>
+
+      <article class="scard" aria-label="Family Money Summit">
+        <div class="sicon" aria-hidden="true">👨‍👩‍👧</div>
+        <h3 class="sname">Family Money Summit</h3>
+        <p class="sdesc-card">Multi-generational wealth planning that gets 2–3 generations aligned. Build a Wealth Blueprint Binder your whole family can use and grow from for years.</p>
+        <button class="sask">Ask Keva AI <span aria-hidden="true">→</span></button>
+      </article>
+
+      <article class="scard" aria-label="Investment Strategy">
+        <div class="sicon" aria-hidden="true">📈</div>
+        <h3 class="sname">Investment Strategy</h3>
+        <p class="sdesc-card">Investing is building, not gambling. Understand your risk tolerance, evaluate opportunities, and develop a disciplined long-term investment strategy.</p>
+        <button class="sask">Ask Keva AI <span aria-hidden="true">→</span></button>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     HOW IT WORKS
+============================================================ -->
+<section id="how" aria-labelledby="how-title">
+  <div class="sw">
+    <div class="how-head">
+      <div class="slabel" style="justify-content:center;">The Process</div>
+      <h2 class="stitle" id="how-title" style="text-align:center;">
+        <span class="line">Clarity in three</span>
+        <span class="line g">simple steps.</span>
+      </h2>
+    </div>
+
+    <div class="steps-wrap">
+      <div class="step-line" aria-hidden="true"></div>
+
+      <div class="step">
+        <div class="step-n" aria-label="Step 1">1</div>
+        <h3 class="step-t">Ask Keva AI</h3>
+        <p class="step-d">Start a free conversation. Share your financial situation, goals, and biggest challenges — no judgment, no shame, no pressure.</p>
+      </div>
+
+      <div class="step">
+        <div class="step-n" aria-label="Step 2">2</div>
+        <h3 class="step-t">Get Your Blueprint</h3>
+        <p class="step-d">Keva AI builds a personalized action plan aligned with your income, values, and timeline. Clear, specific, and built to win.</p>
+      </div>
+
+      <div class="step">
+        <div class="step-n" aria-label="Step 3">3</div>
+        <h3 class="step-t">Take Action + Grow</h3>
+        <p class="step-d">Execute with confidence. Book 1-on-1 sessions with Keva for deeper guidance as your wealth journey evolves and expands.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     ABOUT KEVA
+============================================================ -->
+<section id="about" aria-labelledby="about-title">
+  <div class="sw">
+    <div class="about-grid">
+
+      <div class="about-vis">
+        <div class="about-frame">
+          <img
+            src="keva_img_1.jpeg"
+            alt="Keva, founder of KS Summit Consulting and financial coach, seated in her office"
+            loading="lazy"
+          />
+        </div>
+        <div class="about-badge" aria-label="10+ Years Financial Expert">
+          10+ Years<br>Financial<br>Expert
+        </div>
+      </div>
+
+      <div class="about-cnt">
+        <div class="slabel">The Human Behind the AI</div>
+        <h2 class="stitle" id="about-title">
+          <span class="line">Meet Keva,</span>
+          <span class="line g">Your Money Coach.</span>
+        </h2>
+
+        <blockquote class="about-quote">
+          <p class="aq-text">"It's not about how much you make — it's about how much you keep, grow, and pass on."</p>
+          <cite class="aq-attr">— Keva, Founder of KS Summit Consulting</cite>
+        </blockquote>
+
+        <p class="about-p">
+          Keva is the founder of KS Summit Consulting and the heart behind KevaTheMoneyCoach.com. 
+          With a deep focus on financial clarity, legacy-building, and empowerment, she teaches 
+          everyday people how to master their money — without shame or overwhelm.
+        </p>
+        <p class="about-p">
+          After years of helping individuals and families ditch debt, hit their savings goals, 
+          and finally feel confident about their finances, Keva built Keva AI to take her 
+          message further — making expert financial guidance available to everyone, anytime.
+        </p>
+
+        <a href="#cta" class="btn btn-gold" style="display:inline-flex;">
+          Work With Keva
+          <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     TESTIMONIALS
+============================================================ -->
+<section id="testimonials" aria-labelledby="test-title">
+  <div class="sw">
+    <div class="test-head">
+      <div class="slabel">Client Results</div>
+      <h2 class="stitle" id="test-title" style="text-align:center;">
+        <span class="line">Real people.</span>
+        <span class="line g">Real transformation.</span>
+      </h2>
+      <p class="sdesc">
+        Every client who works with Keva walks away with more than knowledge — 
+        they gain clarity, confidence, and a customized path toward long-term wealth.
+      </p>
+    </div>
+
+    <div class="test-grid">
+      <article class="tcard">
+        <div class="tstars" aria-label="5 stars">★★★★★</div>
+        <p class="ttext">"Keva made finances feel simple and empowering. I walked away with a clear plan, less stress, and actual excitement about my money."</p>
+        <div class="tauthor">
+          <div class="tav" aria-hidden="true">J</div>
+          <div><div class="tname">Jasmine T.</div><div class="tloc">Financial Planning Client</div></div>
+        </div>
+      </article>
+
+      <article class="tcard">
+        <div class="tstars" aria-label="5 stars">★★★★★</div>
+        <p class="ttext">"My sessions with Keva taught me more than I learned in college! I can't get back the years but I am glad I learned how to use the time I have left!"</p>
+        <div class="tauthor">
+          <div class="tav" aria-hidden="true">M</div>
+          <div><div class="tname">M. Morris</div><div class="tloc">Seattle, WA</div></div>
+        </div>
+      </article>
+
+      <article class="tcard">
+        <div class="tstars" aria-label="5 stars">★★★★★</div>
+        <p class="ttext">"Keva made retirement planning actually make sense for me. I wish I found her five years ago."</p>
+        <div class="tauthor">
+          <div class="tav" aria-hidden="true">C</div>
+          <div><div class="tname">Carlos B.</div><div class="tloc">Retirement Planning Client</div></div>
+        </div>
+      </article>
+
+      <article class="tcard">
+        <div class="tstars" aria-label="5 stars">★★★★★</div>
+        <p class="ttext">"I booked an estate planning 1-on-1 session — I swear it was the best money I've spent this year. Keva is a true money coach with heart."</p>
+        <div class="tauthor">
+          <div class="tav" aria-hidden="true">D</div>
+          <div><div class="tname">Denisha M.</div><div class="tloc">Estate Planning Client</div></div>
+        </div>
+      </article>
+
+      <article class="tcard">
+        <div class="tstars" aria-label="5 stars">★★★★★</div>
+        <p class="ttext">"Keva meets you where you are and lifts you higher. Her coaching is loving, practical, and powerful. I tell all my girls to work with her."</p>
+        <div class="tauthor">
+          <div class="tav" aria-hidden="true">E</div>
+          <div><div class="tname">Erica W.</div><div class="tloc">Ongoing Coaching Client</div></div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FINAL CTA
+============================================================ -->
+<section id="cta" aria-labelledby="cta-title">
+  <div class="sw">
+    <div class="cta-inner">
+      <span class="cta-eyebrow">Begin Tonight — It's Free</span>
+      <h2 class="cta-h2" id="cta-title">
+        <span class="w">Your</span>
+        <span class="w g">financial</span>
+        <span class="w">future</span>
+        <span class="w">starts</span>
+        <span class="w g">now.</span>
+      </h2>
+      <p class="cta-p">
+        Start a free conversation with Keva AI tonight. No commitment, no overwhelm — 
+        just clarity, direction, and a wealth plan built specifically for you.
+      </p>
+      <div class="cta-btns">
+        <a href="chat.html" class="btn btn-gold" style="font-size:0.95rem;padding:1.1rem 2.5rem;">
+          Start Free Conversation
+          <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="https://kssummitconsulting.com" class="btn btn-outline" style="font-size:0.95rem;padding:1.1rem 2rem;" target="_blank" rel="noopener noreferrer">
+          Book Clarity Call
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FOOTER
+============================================================ -->
+<footer>
+  <div class="foot-inner">
+    <div class="foot-logo">
+      <img src="logo.webp" alt="Keva The Money Coach logo">
+      KS Summit <em>Consulting</em>
+    </div>
+    <ul class="foot-links">
+      <li><a href="#services">Services</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="https://kssummitconsulting.com" target="_blank" rel="noopener">Original Site</a></li>
+    </ul>
+    <p class="foot-copy">© 2026 KS Summit Consulting. All Rights Reserved.</p>
+  </div>
+</footer>
+
+<!-- ============================================================
+     GSAP + SCROLLTRIGGER
+============================================================ -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+
+<script>
+/* ============================================================
+   INIT
+============================================================ */
+const IS_MOBILE  = window.matchMedia('(pointer: coarse)').matches;
+const NO_MOTION  = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+gsap.registerPlugin(ScrollTrigger);
+
+/* ============================================================
+   HERO MOBILE LAYOUT — applied as inline styles to guarantee
+   no cascade/specificity conflicts on any screen size
+============================================================ */
+function applyHeroLayout() {
+  const vw = window.innerWidth;
+  const inner    = document.getElementById('hero-inner');
+  const text     = document.getElementById('hero-text');
+  const eyebrow  = document.getElementById('hero-eyebrow');
+  const h1       = document.getElementById('hero-h1');
+  const p        = document.getElementById('hero-p');
+  const btns     = document.getElementById('hero-btns');
+
+  if (!inner) return;
+
+  if (vw <= 960) {
+    /* Single-column: center everything */
+    inner.style.gridTemplateColumns = '1fr';
+    inner.style.gap                 = vw <= 600 ? '1.75rem' : '2.5rem';
+    inner.style.padding             = vw <= 400 ? '5rem 1rem 2.5rem'
+                                    : vw <= 600 ? '5.5rem 1.25rem 3rem'
+                                    :             '6rem 1.5rem 4rem';
+
+    text.style.textAlign   = 'center';
+    eyebrow.style.justifyContent = 'center';
+
+    /* Font size scaled to viewport so it never overflows */
+    const fs = Math.min(vw * 0.075, 36);          /* 7.5vw capped at 36px */
+    const fsRem = Math.max(fs / 16, 1.5);          /* never below 1.5rem  */
+    h1.style.fontSize = fsRem + 'rem';
+
+    p.style.maxWidth    = '100%';
+    p.style.marginLeft  = 'auto';
+    p.style.marginRight = 'auto';
+    p.style.fontSize    = vw <= 600 ? '0.95rem' : '1.05rem';
+
+    btns.style.justifyContent = 'center';
+    btns.style.flexDirection  = vw <= 500 ? 'column' : 'row';
+
+    /* Make buttons full-width when stacked */
+    btns.querySelectorAll('.btn').forEach(btn => {
+      btn.style.width          = vw <= 500 ? '100%' : '';
+      btn.style.justifyContent = vw <= 500 ? 'center' : '';
+    });
+
+  } else {
+    /* Desktop: restore defaults */
+    inner.style.gridTemplateColumns = '';
+    inner.style.gap                 = '';
+    inner.style.padding             = '';
+    text.style.textAlign            = '';
+    eyebrow.style.justifyContent    = '';
+    h1.style.fontSize               = '';
+    p.style.maxWidth                = '';
+    p.style.marginLeft              = '';
+    p.style.marginRight             = '';
+    p.style.fontSize                = '';
+    btns.style.justifyContent       = '';
+    btns.style.flexDirection        = '';
+    btns.querySelectorAll('.btn').forEach(btn => {
+      btn.style.width = ''; btn.style.justifyContent = '';
+    });
+  }
+}
+
+applyHeroLayout();
+window.addEventListener('resize', applyHeroLayout, { passive: true });
+
+/* ============================================================
+   CUSTOM CURSOR
+============================================================ */
+if (!IS_MOBILE) {
+  const cur  = document.getElementById('cursor');
+  const ring = document.getElementById('cursor-ring');
+  let mx = 0, my = 0;
+
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    gsap.to(cur,  { x: mx, y: my, duration: 0.08, ease: 'none' });
+    gsap.to(ring, { x: mx, y: my, duration: 0.38, ease: 'power2.out' });
+  });
+
+  document.querySelectorAll('a, button, .scard, .tcard, .chip').forEach(el => {
+    el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
+    el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+  });
+}
+
+/* ============================================================
+   NAV SCROLL
+============================================================ */
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 60);
+}, { passive: true });
+
+/* ============================================================
+   GOLD PARTICLES — depth-5
+============================================================ */
+if (!IS_MOBILE && !NO_MOTION) {
+  const wrap = document.getElementById('particles-wrap');
+  for (let i = 0; i < 28; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 2.5 + 0.8;
+    p.style.cssText = `
+      left:${Math.random()*100}%;
+      top:${Math.random()*100}%;
+      width:${size}px; height:${size}px;
+    `;
+    wrap.appendChild(p);
+    gsap.to(p, {
+      opacity: Math.random() * 0.55 + 0.08,
+      y: -(Math.random() * 90 + 30),
+      x: (Math.random() - 0.5) * 50,
+      duration: Math.random() * 9 + 7,
+      delay: Math.random() * 6,
+      repeat: -1, yoyo: true,
+      ease: 'sine.inOut'
+    });
+  }
+}
+
+/* ============================================================
+   HERO ENTRANCE ANIMATION
+============================================================ */
+if (!NO_MOTION) {
+  const heroTl = gsap.timeline({ delay: 0.25 });
+
+  heroTl
+    .to('.hero-eyebrow', { opacity: 1, y: 0, duration: 0.65, ease: 'power3.out' })
+    .to('.hero-h1 .w',   { opacity: 1, y: 0, duration: 0.72, stagger: 0.075, ease: 'power4.out' }, '-=0.35')
+    .to('.hero-p',       { opacity: 1, y: 0, duration: 0.6,  ease: 'power3.out' }, '-=0.35')
+    .to('.hero-btns',    { opacity: 1, y: 0, duration: 0.5,  ease: 'power3.out' }, '-=0.25')
+    .to('.chat-window',  { opacity: 1, y: 0, scale: 1, duration: 0.95, ease: 'back.out(1.15)' }, '-=0.65');
+} else {
+  gsap.set(['.hero-eyebrow','.hero-h1 .w','.hero-p','.hero-btns','.chat-window'], {
+    opacity: 1, y: 0, scale: 1
+  });
+}
+
+/* ============================================================
+   HERO PARALLAX (scroll depth system)
+============================================================ */
+if (!IS_MOBILE && !NO_MOTION) {
+  const heroEl = document.getElementById('hero');
+  window.addEventListener('scroll', () => {
+    const sy = window.scrollY;
+    if (sy > heroEl.offsetHeight) return;
+    gsap.set('.gblob-1', { y: sy * 0.12 });
+    gsap.set('.gblob-2', { y: sy * 0.18 });
+    gsap.set('.gblob-3', { y: sy * 0.08 });
+    gsap.set('.hgrid',   { y: sy * 0.28 });
+    gsap.set('.chat-wrap', { y: sy * 0.07 });
+    gsap.set('.hero-text', { y: sy * 0.045 });
+  }, { passive: true });
+}
+
+/* ============================================================
+   CHAT DEMO — animated conversation
+============================================================ */
+const DEMO_MSGS = [
+  { t: 'ai',   tx: "Hi! I'm Keva AI 👋 I'm here to help you build real financial clarity. What's your biggest money challenge right now?" },
+  { t: 'user', tx: "I have around $18,000 in credit card debt across 3 cards. I don't know where to start." },
+  { t: 'ai',   tx: "You're in exactly the right place — and you're not alone. Let's build your debt-free roadmap. The avalanche method will save you the most in interest. Want me to walk you through the exact steps based on your balances?" },
+];
+
+const msgsEl = document.getElementById('chat-msgs');
+
+const makeMsg = ({ t, tx }) => {
+  const d = document.createElement('div');
+  d.className = `cmsg ${t}`;
+  d.setAttribute('role', 'listitem');
+
+  const av = document.createElement('div');
+  av.className = `mav ${t === 'user' ? 'u' : ''}`;
+  av.setAttribute('aria-hidden', 'true');
+  av.textContent = t === 'ai' ? '💰' : '👤';
+
+  const b = document.createElement('div');
+  b.className = 'mbubble';
+  b.textContent = tx;
+
+  d.appendChild(av);
+  d.appendChild(b);
+  return d;
+};
+
+const makeTyping = () => {
+  const d = document.createElement('div');
+  d.className = 'typing-msg';
+  d.id = 'typer';
+  d.innerHTML = `
+    <div class="mav" aria-hidden="true">💰</div>
+    <div class="typing-bubbles" aria-label="Keva AI is typing">
+      <div class="tdot"></div><div class="tdot"></div><div class="tdot"></div>
+    </div>`;
+  return d;
+};
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+async function runDemo() {
+  if (NO_MOTION) {
+    DEMO_MSGS.forEach(m => {
+      const el = makeMsg(m);
+      el.style.cssText = 'opacity:1;transform:none';
+      msgsEl.appendChild(el);
+    });
+    return;
+  }
+
+  for (let i = 0; i < DEMO_MSGS.length; i++) {
+    const m = DEMO_MSGS[i];
+
+    if (m.t === 'ai') {
+      const ty = makeTyping();
+      msgsEl.appendChild(ty);
+      gsap.fromTo(ty, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.3 });
+      msgsEl.scrollTop = msgsEl.scrollHeight;
+      await sleep(1100 + Math.random() * 700);
+      ty.remove();
+    } else {
+      await sleep(750);
+    }
+
+    const el = makeMsg(m);
+    msgsEl.appendChild(el);
+    gsap.to(el, { opacity: 1, y: 0, duration: 0.38, ease: 'power2.out' });
+    msgsEl.scrollTop = msgsEl.scrollHeight;
+    await sleep(m.t === 'ai' ? 500 : 350);
+  }
+}
+
+setTimeout(runDemo, NO_MOTION ? 0 : 2100);
+
+/* ============================================================
+   CHAT: SEND MESSAGE (hookable for real API)
+============================================================ */
+const chatInp  = document.getElementById('chat-input');
+const chatSend = document.getElementById('chat-send');
+
+const AI_RESPONSES = [
+  "Great question! Based on what you've shared, I have some personalized recommendations. To give you the most accurate guidance tailored to your exact numbers, I'd love to book you a free Clarity Call with Keva. Would that work for you?",
+  "That's exactly the right thing to focus on right now. Let me outline a quick strategy: first, we'd want to assess your current cashflow, then identify your biggest leverage points. Keva can walk you through this step by step in a 1-on-1 session — shall I schedule one?",
+  "Perfect timing to address this! Keva has helped hundreds of clients in this exact situation. The key is starting with the right foundation. I can give you a starting framework right now, and Keva can personalize the full plan with you directly. Want to book that free call?",
+];
+let aiRespIdx = 0;
+
+async function sendMessage() {
+  const val = chatInp.value.trim();
+  if (!val) return;
+
+  const userEl = makeMsg({ t: 'user', tx: val });
+  msgsEl.appendChild(userEl);
+  if (!NO_MOTION) gsap.to(userEl, { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' });
+  else userEl.style.cssText = 'opacity:1;transform:none';
+  msgsEl.scrollTop = msgsEl.scrollHeight;
+  chatInp.value = '';
+
+  await sleep(320);
+  const ty = makeTyping();
+  msgsEl.appendChild(ty);
+  if (!NO_MOTION) gsap.fromTo(ty, { opacity:0, y:8 }, { opacity:1, y:0, duration:0.3 });
+  else ty.style.cssText = 'opacity:1';
+  msgsEl.scrollTop = msgsEl.scrollHeight;
+
+  await sleep(1400 + Math.random() * 800);
+  ty.remove();
+
+  const resp = AI_RESPONSES[aiRespIdx % AI_RESPONSES.length];
+  aiRespIdx++;
+  const aiEl = makeMsg({ t: 'ai', tx: resp });
+  msgsEl.appendChild(aiEl);
+  if (!NO_MOTION) gsap.to(aiEl, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' });
+  else aiEl.style.cssText = 'opacity:1;transform:none';
+  msgsEl.scrollTop = msgsEl.scrollHeight;
+}
+
+chatSend.addEventListener('click', sendMessage);
+chatInp.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
+
+/* ============================================================
+   CHIPS — pre-fill chat input
+============================================================ */
+const CHIP_MAP = {
+  '💳 Eliminate debt': 'I have credit card debt I want to eliminate as fast as possible. Where do I start?',
+  '📈 Retire early':   'I want to retire early — how much do I need and what tools should I use?',
+  '💰 Build savings':  'What\'s the best way to start building real savings from where I am now?',
+  '🏠 Family wealth':  'How do I start building generational wealth that lasts for my family?',
+};
+
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    chatInp.value = CHIP_MAP[chip.textContent.trim()] || chip.textContent.trim();
+    chatInp.focus();
+    document.getElementById('chat-anchor').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+});
+
+/* ============================================================
+   SERVICE CARD ASK BUTTONS
+============================================================ */
+document.querySelectorAll('.sask').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const name = btn.closest('.scard').querySelector('.sname').textContent;
+    window.location.href = `chat.html?q=${encodeURIComponent('Tell me about ' + name + ' — how can Keva AI help me with this?')}`;
+  });
+});
+
+/* ============================================================
+   SCROLL-TRIGGERED ANIMATIONS
+============================================================ */
+
+/* Trust bar */
+ScrollTrigger.create({
+  trigger: '#trust', start: 'top 88%',
+  onEnter: () => gsap.to('.tstat', { opacity:1, y:0, duration:0.55, stagger:0.1, ease:'power3.out' })
+});
+
+/* Services */
+ScrollTrigger.create({
+  trigger: '#services', start: 'top 80%',
+  onEnter: () => {
+    gsap.to('#services .slabel',       { opacity:1, x:0, duration:0.5, ease:'power2.out' });
+    gsap.to('#services .stitle .line', { opacity:1, y:0, duration:0.75, stagger:0.12, ease:'power4.out', delay:0.1 });
+    gsap.to('#services .sdesc',        { opacity:1, y:0, duration:0.6,  delay:0.3, ease:'power3.out' });
+    gsap.to('.scard', {
+      clipPath: 'inset(0 0 0% 0)',
+      duration: 0.72, stagger: 0.1, ease: 'power4.out', delay: 0.2
+    });
+  }
+});
+
+/* How It Works */
+ScrollTrigger.create({
+  trigger: '#how', start: 'top 78%',
+  onEnter: () => {
+    gsap.to('#how .stitle .line', { opacity:1, y:0, duration:0.75, stagger:0.12, ease:'power4.out' });
+    gsap.to('.step', { opacity:1, y:0, duration:0.65, stagger:0.18, ease:'power3.out', delay:0.2 });
+    gsap.to('.step-line', { scaleX:1, duration:1.1, ease:'power2.inOut', delay:0.55 });
+  }
+});
+
+/* About */
+ScrollTrigger.create({
+  trigger: '#about', start: 'top 78%',
+  onEnter: () => {
+    gsap.to('#about .slabel',       { opacity:1, x:0, duration:0.5, ease:'power2.out' });
+    gsap.to('#about .stitle .line', { opacity:1, y:0, duration:0.75, stagger:0.12, ease:'power4.out', delay:0.1 });
+    gsap.to('.about-vis',           { opacity:1, x:0, duration:0.85, ease:'power3.out' });
+    gsap.to('.about-cnt',           { opacity:1, x:0, duration:0.85, ease:'power3.out', delay:0.15 });
+  }
+});
+
+/* Testimonials */
+ScrollTrigger.create({
+  trigger: '#testimonials', start: 'top 78%',
+  onEnter: () => {
+    gsap.to('#testimonials .slabel',       { opacity:1, x:0, duration:0.5, ease:'power2.out' });
+    gsap.to('#testimonials .stitle .line', { opacity:1, y:0, duration:0.75, stagger:0.12, ease:'power4.out', delay:0.1 });
+    gsap.to('#testimonials .sdesc',        { opacity:1, y:0, duration:0.6, delay:0.3, ease:'power3.out' });
+    gsap.to('.tcard', { opacity:1, y:0, duration:0.65, stagger:0.1, ease:'power3.out', delay:0.3 });
+  }
+});
+
+/* CTA */
+ScrollTrigger.create({
+  trigger: '#cta', start: 'top 78%',
+  onEnter: () => {
+    gsap.to('.cta-eyebrow',  { opacity:1, duration:0.5, ease:'power2.out' });
+    gsap.to('.cta-h2 .w',    { opacity:1, y:0, duration:0.75, stagger:0.08, ease:'power4.out', delay:0.2 });
+    gsap.to('.cta-p',        { opacity:1, duration:0.6, delay:0.65, ease:'power3.out' });
+    gsap.to('.cta-btns',     { opacity:1, duration:0.5, delay:0.85, ease:'power3.out' });
+  }
+});
+
+/* ============================================================
+   MOBILE NAV TOGGLE
+============================================================ */
+const navToggle      = document.getElementById('nav-toggle');
+const navMobileMenu  = document.getElementById('nav-mobile');
+const navMobileClose = document.getElementById('nav-mobile-close');
+const navMobileLinks = document.querySelectorAll('.nav-mobile-link, .nav-mobile-actions a');
+
+function openMobileNav() {
+  navMobileMenu.classList.add('open');
+  navMobileMenu.setAttribute('aria-hidden', 'false');
+  navToggle.setAttribute('aria-expanded', 'true');
+  navToggle.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>`;
+  document.body.style.overflow = 'hidden';
+}
+function closeMobileNav() {
+  navMobileMenu.classList.remove('open');
+  navMobileMenu.setAttribute('aria-hidden', 'true');
+  navToggle.setAttribute('aria-expanded', 'false');
+  navToggle.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12h18M3 6h18M3 18h18"/></svg>`;
+  document.body.style.overflow = '';
+}
+
+navToggle?.addEventListener('click', openMobileNav);
+navMobileClose?.addEventListener('click', closeMobileNav);
+navMobileLinks.forEach(l => l.addEventListener('click', closeMobileNav));
+/* close on backdrop click */
+navMobileMenu?.addEventListener('click', e => { if (e.target === navMobileMenu) closeMobileNav(); });
+/* close on Escape */
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMobileNav(); });
+</script>
+
+</body>
+</html>

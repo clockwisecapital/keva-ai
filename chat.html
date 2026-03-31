@@ -1,0 +1,1688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Chat with Keva AI — your 24/7 personal financial advisor powered by Keva The Money Coach.">
+  <title>Keva AI — Your Financial Advisor</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* ============================================================
+       RESET + TOKENS
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #050810;
+      --bg-2:         #090e1c;
+      --bg-3:         #0d1526;
+      --bg-4:         #111a30;
+      --gold:         #C9A256;
+      --gold-light:   #E8C97A;
+      --gold-dim:     rgba(201,162,86,0.1);
+      --gold-border:  rgba(201,162,86,0.2);
+      --white:        #F8F4EE;
+      --white-70:     rgba(248,244,238,0.7);
+      --white-40:     rgba(248,244,238,0.4);
+      --white-15:     rgba(248,244,238,0.15);
+      --white-08:     rgba(248,244,238,0.08);
+      --green:        #4ade80;
+      --sidebar-w:    280px;
+      --header-h:     64px;
+      --input-h:      80px;
+      --serif:        'Playfair Display', Georgia, serif;
+      --sans:         'Inter', system-ui, sans-serif;
+      --ease:         cubic-bezier(0.16,1,0.3,1);
+      --spring:       cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    html, body {
+      height: 100%; overflow: hidden;
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--white);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button { font-family: inherit; cursor: pointer; border: none; background: none; }
+    a { text-decoration: none; color: inherit; }
+    ul { list-style: none; }
+    textarea { font-family: inherit; }
+
+    /* ============================================================
+       LAYOUT SHELL
+    ============================================================ */
+    .app {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ============================================================
+       SIDEBAR OVERLAY (mobile)
+    ============================================================ */
+    .sidebar-overlay {
+      display: none;
+      position: fixed; inset: 0; z-index: 40;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .sidebar-overlay.visible {
+      display: block;
+      opacity: 1;
+    }
+
+    /* ============================================================
+       SIDEBAR
+    ============================================================ */
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: var(--bg-2);
+      border-right: 1px solid var(--gold-border);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      transition: transform 0.35s var(--ease);
+      z-index: 50;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        position: fixed; top: 0; left: 0; bottom: 0;
+        transform: translateX(-100%);
+      }
+      .sidebar.open { transform: translateX(0); }
+    }
+
+    /* Sidebar Header */
+    .sb-head {
+      padding: 1.25rem 1.25rem 1rem;
+      border-bottom: 1px solid var(--gold-border);
+      flex-shrink: 0;
+    }
+
+    .sb-logo {
+      display: flex; align-items: center; gap: 0.6rem;
+      margin-bottom: 1rem;
+    }
+    .sb-logo img {
+      width: 36px; height: 36px;
+      object-fit: contain; border-radius: 50%;
+    }
+    .sb-logo-text {
+      font-family: var(--serif);
+      font-size: 0.95rem; font-weight: 700; color: var(--white);
+      line-height: 1.2;
+    }
+    .sb-logo-text span { color: var(--gold); font-size: 0.65rem; display: block; font-family: var(--sans); font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 1px; }
+
+    .new-chat-btn {
+      width: 100%;
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.7rem 1rem;
+      background: var(--gold-dim);
+      border: 1px solid var(--gold-border);
+      border-radius: 8px;
+      color: var(--gold);
+      font-size: 0.825rem; font-weight: 600;
+      transition: background 0.2s, border-color 0.2s, transform 0.15s var(--spring);
+    }
+    .new-chat-btn:hover {
+      background: rgba(201,162,86,0.18);
+      border-color: rgba(201,162,86,0.4);
+      transform: translateY(-1px);
+    }
+    .new-chat-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    /* Sidebar Conversations */
+    .sb-history {
+      flex: 1; overflow-y: auto;
+      padding: 1rem 0.75rem;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(201,162,86,0.15) transparent;
+    }
+    .sb-history::-webkit-scrollbar { width: 4px; }
+    .sb-history::-webkit-scrollbar-thumb { background: rgba(201,162,86,0.15); border-radius: 4px; }
+
+    .sb-section-label {
+      font-size: 0.65rem; font-weight: 600; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--white-40);
+      padding: 0 0.5rem; margin-bottom: 0.4rem; margin-top: 1rem;
+    }
+    .sb-section-label:first-child { margin-top: 0; }
+
+    .conv-item {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.6rem 0.75rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+      position: relative;
+      group: true;
+    }
+    .conv-item:hover { background: var(--white-08); }
+    .conv-item.active { background: var(--gold-dim); border: 1px solid var(--gold-border); }
+
+    .conv-icon {
+      width: 28px; height: 28px; border-radius: 6px;
+      background: var(--white-08);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; flex-shrink: 0;
+    }
+    .conv-item.active .conv-icon { background: var(--gold-dim); }
+
+    .conv-meta { flex: 1; min-width: 0; }
+    .conv-title {
+      font-size: 0.8rem; font-weight: 500; color: var(--white-70);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      line-height: 1.3;
+    }
+    .conv-item.active .conv-title { color: var(--gold); }
+    .conv-time {
+      font-size: 0.65rem; color: var(--white-40); margin-top: 1px;
+    }
+    .conv-del {
+      opacity: 0; width: 20px; height: 20px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 4px; color: var(--white-40);
+      transition: opacity 0.15s, color 0.15s, background 0.15s;
+      flex-shrink: 0;
+    }
+    .conv-item:hover .conv-del { opacity: 1; }
+    .conv-del:hover { color: #f87171; background: rgba(248,113,113,0.1); }
+    .conv-del svg { width: 12px; height: 12px; }
+
+    /* Sidebar Footer */
+    .sb-foot {
+      padding: 1rem 1.25rem;
+      border-top: 1px solid var(--gold-border);
+      flex-shrink: 0;
+    }
+    .sb-cta {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      background: linear-gradient(135deg, var(--gold), #c49020);
+      color: var(--bg);
+      font-size: 0.78rem; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+      transition: opacity 0.2s, transform 0.15s var(--spring);
+      margin-bottom: 0.85rem;
+    }
+    .sb-cta:hover { opacity: 0.9; transform: translateY(-1px); }
+    .sb-cta svg { width: 13px; height: 13px; }
+
+    .sb-user {
+      display: flex; align-items: center; gap: 0.7rem;
+    }
+    .sb-user-av {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--white-08); border: 1px solid var(--white-15);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; color: var(--white-70); flex-shrink: 0;
+    }
+    .sb-user-name { font-size: 0.8rem; font-weight: 500; color: var(--white-70); }
+    .sb-user-status { font-size: 0.65rem; color: var(--green); }
+
+    /* ============================================================
+       MAIN CHAT AREA
+    ============================================================ */
+    .main {
+      flex: 1; min-width: 0;
+      display: flex; flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Chat Header */
+    .chat-header {
+      height: var(--header-h);
+      border-bottom: 1px solid var(--gold-border);
+      background: rgba(5,8,16,0.85);
+      backdrop-filter: blur(16px);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 1.5rem;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    .chat-header-left {
+      display: flex; align-items: center; gap: 0.9rem;
+    }
+
+    .menu-btn {
+      display: none;
+      width: 36px; height: 36px;
+      align-items: center; justify-content: center;
+      border-radius: 8px; color: var(--white-70);
+      transition: background 0.15s, color 0.15s;
+    }
+    .menu-btn:hover { background: var(--white-08); color: var(--white); }
+    .menu-btn svg { width: 18px; height: 18px; }
+    @media (max-width: 768px) { .menu-btn { display: flex; } }
+
+    .ai-identity {
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .ai-av-wrap { position: relative; }
+    .ai-av {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), #c49020);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      box-shadow: 0 0 16px rgba(201,162,86,0.25);
+    }
+    .ai-status-dot {
+      position: absolute; bottom: 1px; right: 1px;
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--green);
+      border: 2px solid var(--bg);
+      animation: sdot 2s ease-in-out infinite;
+    }
+    @keyframes sdot { 0%,100%{opacity:1}50%{opacity:0.35} }
+
+    .ai-info-name {
+      font-size: 0.925rem; font-weight: 600; color: var(--white);
+    }
+    .ai-info-sub {
+      font-size: 0.68rem; color: var(--white-40);
+      display: flex; align-items: center; gap: 0.35rem;
+      margin-top: 1px;
+    }
+    .ai-info-sub .gdot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--green); display: inline-block;
+    }
+
+    .chat-header-right {
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+
+    .header-btn {
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 8px; color: var(--white-40);
+      transition: background 0.15s, color 0.15s;
+    }
+    .header-btn:hover { background: var(--white-08); color: var(--white-70); }
+    .header-btn svg { width: 16px; height: 16px; }
+
+    .book-call-btn {
+      display: flex; align-items: center; gap: 0.4rem;
+      padding: 0.45rem 1rem;
+      background: transparent;
+      border: 1px solid var(--gold-border);
+      border-radius: 20px;
+      color: var(--gold);
+      font-size: 0.72rem; font-weight: 600;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .book-call-btn svg { width: 12px; height: 12px; flex-shrink: 0; }
+    .book-call-btn:hover {
+      background: var(--gold-dim);
+      border-color: rgba(201,162,86,0.42);
+    }
+    /* Hide "Book a Call" in header on mobile — it lives in the sidebar */
+    @media (max-width: 768px) { .book-call-btn { display: none; } }
+
+    /* ============================================================
+       MESSAGES AREA
+    ============================================================ */
+    .messages-area {
+      flex: 1; overflow-y: auto;
+      padding: 2rem 0;
+      scroll-behavior: smooth;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(201,162,86,0.12) transparent;
+      position: relative;
+    }
+    .messages-area::-webkit-scrollbar { width: 5px; }
+    .messages-area::-webkit-scrollbar-thumb { background: rgba(201,162,86,0.12); border-radius: 5px; }
+
+    .messages-inner {
+      max-width: 780px; margin: 0 auto;
+      padding: 0 1.5rem;
+      display: flex; flex-direction: column; gap: 0.25rem;
+    }
+
+    /* ============================================================
+       WELCOME STATE
+    ============================================================ */
+    .welcome-screen {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      min-height: calc(100vh - var(--header-h) - var(--input-h) - 4rem);
+      text-align: center;
+      padding: 2rem 1.5rem;
+    }
+
+    .welcome-av-wrap {
+      position: relative; margin-bottom: 1.5rem;
+    }
+    .welcome-av {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), #c49020);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem;
+      box-shadow: 0 0 0 8px rgba(201,162,86,0.06), 0 0 40px rgba(201,162,86,0.2);
+      animation: avPulse 4s ease-in-out infinite;
+    }
+    @keyframes avPulse {
+      0%,100% { box-shadow: 0 0 0 8px rgba(201,162,86,0.06), 0 0 40px rgba(201,162,86,0.2); }
+      50% { box-shadow: 0 0 0 14px rgba(201,162,86,0.04), 0 0 60px rgba(201,162,86,0.28); }
+    }
+    .welcome-online {
+      position: absolute; bottom: 4px; right: 4px;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: var(--green); border: 2px solid var(--bg);
+    }
+
+    .welcome-greeting {
+      font-family: var(--serif);
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      font-weight: 700; margin-bottom: 0.5rem;
+      line-height: 1.2;
+    }
+    .welcome-greeting em { color: var(--gold); font-style: normal; }
+
+    .welcome-sub {
+      font-size: 0.95rem; color: var(--white-40);
+      max-width: 420px; line-height: 1.65; margin-bottom: 3rem;
+    }
+
+    .prompt-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.875rem;
+      width: 100%; max-width: 600px;
+    }
+    @media (max-width: 480px) { .prompt-grid { grid-template-columns: 1fr; } }
+
+    .prompt-card {
+      background: var(--bg-3);
+      border: 1px solid rgba(201,162,86,0.14);
+      border-radius: 12px;
+      padding: 1.1rem 1.15rem;
+      text-align: left; cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, transform 0.2s var(--spring);
+      position: relative; overflow: hidden;
+    }
+    .prompt-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(201,162,86,0.3), transparent);
+      transform: scaleX(0); transform-origin: left;
+      transition: transform 0.3s ease;
+    }
+    .prompt-card:hover {
+      background: var(--bg-4);
+      border-color: rgba(201,162,86,0.3);
+      transform: translateY(-2px);
+    }
+    .prompt-card:hover::before { transform: scaleX(1); }
+
+    .pc-icon {
+      font-size: 1.25rem; margin-bottom: 0.5rem; display: block;
+    }
+    .pc-title {
+      font-size: 0.835rem; font-weight: 600; color: var(--white);
+      margin-bottom: 0.25rem; line-height: 1.3;
+    }
+    .pc-sub {
+      font-size: 0.75rem; color: var(--white-40); line-height: 1.45;
+    }
+
+    /* ============================================================
+       MESSAGE BUBBLES
+    ============================================================ */
+    .msg-group {
+      display: flex; flex-direction: column; gap: 0.5rem;
+      animation: msgIn 0.35s var(--ease) both;
+    }
+    @keyframes msgIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Date divider */
+    .date-divider {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .date-divider::before, .date-divider::after {
+      content: ''; flex: 1; height: 1px; background: rgba(201,162,86,0.1);
+    }
+    .date-divider span {
+      font-size: 0.68rem; color: var(--white-40); white-space: nowrap;
+      letter-spacing: 0.06em;
+    }
+
+    .msg-row {
+      display: flex; gap: 0.75rem;
+      align-items: flex-end;
+    }
+    .msg-row.user { flex-direction: row-reverse; }
+
+    .msg-av {
+      width: 30px; height: 30px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; flex-shrink: 0; align-self: flex-end;
+      margin-bottom: 2px;
+    }
+    .msg-av.ai-av-sm {
+      background: linear-gradient(135deg, var(--gold), #c49020);
+      box-shadow: 0 0 10px rgba(201,162,86,0.2);
+    }
+    .msg-av.user-av-sm {
+      background: var(--white-08);
+      border: 1px solid var(--white-15);
+      color: var(--white-70);
+    }
+
+    .msg-content {
+      display: flex; flex-direction: column; gap: 2px;
+      max-width: 72%;
+    }
+    .msg-row.user .msg-content { align-items: flex-end; }
+
+    .msg-bubble {
+      padding: 0.85rem 1.1rem;
+      font-size: 0.9rem; line-height: 1.65;
+      position: relative;
+    }
+
+    .msg-row.ai .msg-bubble {
+      background: var(--bg-3);
+      border: 1px solid rgba(201,162,86,0.12);
+      border-radius: 4px 16px 16px 16px;
+      color: var(--white);
+    }
+
+    .msg-row.user .msg-bubble {
+      background: var(--gold);
+      border-radius: 16px 4px 16px 16px;
+      color: var(--bg);
+      font-weight: 500;
+    }
+
+    .msg-meta {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0 4px;
+    }
+    .msg-row.user .msg-meta { justify-content: flex-end; }
+
+    .msg-time {
+      font-size: 0.63rem; color: var(--white-40);
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .msg-row:hover .msg-time { opacity: 1; }
+
+    .msg-copy {
+      opacity: 0; width: 20px; height: 20px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 4px; color: var(--white-40);
+      transition: opacity 0.2s, color 0.15s, background 0.15s;
+    }
+    .msg-row:hover .msg-copy { opacity: 1; }
+    .msg-copy:hover { color: var(--gold); background: var(--gold-dim); }
+    .msg-copy svg { width: 11px; height: 11px; }
+    .msg-copy.copied { color: var(--green); }
+
+    /* AI message with rich formatting */
+    .msg-bubble p { margin-bottom: 0.5rem; }
+    .msg-bubble p:last-child { margin-bottom: 0; }
+    .msg-bubble strong { color: var(--gold); font-weight: 600; }
+    .msg-bubble ul { padding-left: 1.2rem; margin: 0.5rem 0; }
+    .msg-bubble ul li { margin-bottom: 0.25rem; }
+
+    /* Suggested follow-ups */
+    .msg-suggestions {
+      display: flex; gap: 0.5rem; flex-wrap: wrap;
+      margin-top: 0.5rem; padding-left: 38px;
+    }
+    .msg-sug-chip {
+      background: var(--bg-3);
+      border: 1px solid var(--gold-border);
+      border-radius: 16px; padding: 0.35rem 0.85rem;
+      font-size: 0.72rem; color: var(--gold);
+      cursor: pointer; white-space: nowrap;
+      transition: background 0.2s, color 0.2s, transform 0.15s var(--spring);
+    }
+    .msg-sug-chip:hover {
+      background: var(--gold-dim);
+      color: var(--gold-light);
+      transform: translateY(-1px);
+    }
+
+    /* ============================================================
+       TYPING INDICATOR
+    ============================================================ */
+    .typing-row {
+      display: flex; gap: 0.75rem; align-items: flex-end;
+      animation: msgIn 0.3s var(--ease) both;
+    }
+    .typing-bubble {
+      background: var(--bg-3);
+      border: 1px solid rgba(201,162,86,0.12);
+      border-radius: 4px 16px 16px 16px;
+      padding: 0.9rem 1.1rem;
+      display: flex; gap: 5px; align-items: center;
+    }
+    .tdot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--gold); opacity: 0.35;
+      animation: tdot 1.4s ease-in-out infinite;
+    }
+    .tdot:nth-child(2) { animation-delay: 0.2s; }
+    .tdot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes tdot {
+      0%,60%,100% { transform: translateY(0); opacity: 0.35; }
+      30% { transform: translateY(-7px); opacity: 1; }
+    }
+
+    /* ============================================================
+       SCROLL TO BOTTOM BUTTON
+    ============================================================ */
+    .scroll-btn {
+      position: absolute; bottom: calc(var(--input-h) + 1.5rem); right: 1.5rem;
+      width: 38px; height: 38px;
+      background: var(--bg-3);
+      border: 1px solid var(--gold-border);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--gold); z-index: 5;
+      transform: translateY(10px); opacity: 0;
+      transition: opacity 0.2s, transform 0.2s var(--spring), background 0.15s;
+      pointer-events: none;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    }
+    .scroll-btn.visible {
+      opacity: 1; transform: translateY(0); pointer-events: auto;
+    }
+    .scroll-btn:hover { background: var(--gold-dim); }
+    .scroll-btn svg { width: 15px; height: 15px; }
+
+    /* ============================================================
+       INPUT AREA
+    ============================================================ */
+    .input-zone {
+      flex-shrink: 0;
+      border-top: 1px solid var(--gold-border);
+      background: rgba(5,8,16,0.92);
+      backdrop-filter: blur(20px);
+      padding: 1rem 1.5rem;
+    }
+
+    .input-inner {
+      max-width: 780px; margin: 0 auto;
+    }
+
+    /* Topic chips above input */
+    .topic-chips {
+      display: flex; gap: 0.5rem; flex-wrap: nowrap;
+      overflow-x: auto; scrollbar-width: none;
+      margin-bottom: 0.75rem;
+      padding-bottom: 2px;
+    }
+    .topic-chips::-webkit-scrollbar { display: none; }
+
+    .topic-chip {
+      background: var(--bg-3);
+      border: 1px solid rgba(201,162,86,0.14);
+      border-radius: 16px; padding: 0.3rem 0.8rem;
+      font-size: 0.7rem; color: var(--white-40);
+      white-space: nowrap; cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      flex-shrink: 0;
+    }
+    .topic-chip:hover {
+      background: var(--gold-dim);
+      color: var(--gold);
+      border-color: var(--gold-border);
+    }
+
+    /* Input row */
+    .input-row {
+      display: flex; gap: 0.75rem; align-items: flex-end;
+    }
+
+    .input-box {
+      flex: 1;
+      background: var(--bg-3);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 14px;
+      padding: 0.85rem 1.1rem;
+      color: var(--white); font-size: 0.9rem;
+      resize: none; outline: none;
+      line-height: 1.5;
+      min-height: 50px; max-height: 160px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      overflow-y: auto; scrollbar-width: thin;
+    }
+    .input-box::placeholder { color: var(--white-40); }
+    .input-box:focus {
+      border-color: rgba(201,162,86,0.35);
+      box-shadow: 0 0 0 3px rgba(201,162,86,0.06);
+    }
+
+    .send-btn {
+      width: 46px; height: 46px; flex-shrink: 0;
+      background: var(--gold);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, transform 0.15s var(--spring), opacity 0.2s;
+      opacity: 0.5;
+    }
+    .send-btn.ready { opacity: 1; }
+    .send-btn.ready:hover {
+      background: var(--gold-light);
+      transform: scale(1.06);
+    }
+    .send-btn svg { width: 17px; height: 17px; fill: var(--bg); }
+
+    /* Input footer */
+    .input-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 0.6rem;
+    }
+    .input-hint {
+      font-size: 0.65rem; color: var(--white-40);
+      display: flex; align-items: center; gap: 0.35rem;
+    }
+    .input-hint kbd {
+      background: var(--bg-4); border: 1px solid var(--white-15);
+      border-radius: 3px; padding: 0.1rem 0.35rem;
+      font-size: 0.6rem; color: var(--white-40); font-family: inherit;
+    }
+    .char-count { font-size: 0.65rem; color: var(--white-40); }
+
+    /* ============================================================
+       DISCLAIMER
+    ============================================================ */
+    .disclaimer {
+      text-align: center;
+      font-size: 0.63rem; color: var(--white-40);
+      margin-top: 0.5rem;
+      line-height: 1.5;
+    }
+    .disclaimer a { color: var(--gold); text-decoration: underline; opacity: 0.7; }
+
+    /* ============================================================
+       BACK TO SITE LINK
+    ============================================================ */
+    .back-link {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      font-size: 0.72rem; color: var(--white-40);
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--gold); }
+    .back-link svg { width: 13px; height: 13px; }
+
+    /* ============================================================
+       TOAST NOTIFICATION
+    ============================================================ */
+    .toast {
+      position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--bg-4); border: 1px solid var(--gold-border);
+      color: var(--white-70); font-size: 0.78rem;
+      padding: 0.6rem 1.25rem; border-radius: 20px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s var(--ease);
+      z-index: 1000; white-space: nowrap;
+    }
+    .toast.show {
+      opacity: 1; transform: translateX(-50%) translateY(0);
+    }
+
+    /* ============================================================
+       BACKGROUND ATMOSPHERE
+    ============================================================ */
+    .bg-glow {
+      position: fixed; pointer-events: none; z-index: 0;
+      border-radius: 50%; filter: blur(100px);
+    }
+    .bg-glow-1 {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(201,162,86,0.04), transparent 70%);
+      top: -200px; right: -100px;
+      animation: glowPulse 12s ease-in-out infinite;
+    }
+    .bg-glow-2 {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(30,60,180,0.05), transparent 70%);
+      bottom: -100px; left: -100px;
+      animation: glowPulse 10s ease-in-out infinite reverse;
+    }
+    @keyframes glowPulse {
+      0%,100% { opacity: 0.5; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(1.1); }
+    }
+
+    /* ============================================================
+       EMPTY HISTORY STATE
+    ============================================================ */
+    .sb-empty {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 2rem 1rem; text-align: center;
+      color: var(--white-40); font-size: 0.78rem; line-height: 1.6;
+    }
+    .sb-empty svg { width: 28px; height: 28px; margin-bottom: 0.75rem; opacity: 0.3; }
+
+    /* ============================================================
+       TOUCH DEVICES — always show interactive controls
+       (hover states don't exist on touch)
+    ============================================================ */
+    @media (pointer: coarse) {
+      .msg-copy    { opacity: 1 !important; }
+      .msg-time    { opacity: 1 !important; }
+      .conv-del    { opacity: 1 !important; }
+    }
+
+    /* ============================================================
+       COMPREHENSIVE MOBILE RESPONSIVE FIXES — chat.html
+    ============================================================ */
+
+    /* Chat header — tighten on small screens */
+    @media (max-width: 520px) {
+      .chat-header { padding: 0 0.875rem; gap: 0.5rem; }
+      .chat-header-left { gap: 0.5rem; }
+      .chat-header-right { gap: 0.2rem; }
+    }
+    @media (max-width: 420px) {
+      .ai-info-sub { display: none; }
+      .ai-info-name { font-size: 0.825rem; }
+    }
+    @media (max-width: 360px) {
+      .book-call-btn { display: none; }
+    }
+
+    /* Input zone — tighter padding on mobile */
+    @media (max-width: 768px) {
+      .input-zone { padding: 0.75rem 1rem 0.875rem; }
+    }
+    @media (max-width: 480px) {
+      .input-zone { padding: 0.625rem 0.875rem 0.75rem; }
+    }
+
+    /* Keyboard shortcut hint: hidden on touch (not applicable) */
+    @media (pointer: coarse) {
+      .input-hint { display: none; }
+      .input-footer { justify-content: flex-end; }
+    }
+    /* Also hide on very small screens regardless of pointer */
+    @media (max-width: 400px) {
+      .input-hint { display: none; }
+    }
+
+    /* Disclaimer: hide on very small screens to save vertical space */
+    @media (max-width: 380px) {
+      .disclaimer { display: none; }
+    }
+    @media (max-width: 520px) {
+      .disclaimer { font-size: 0.6rem; }
+    }
+
+    /* Topic chips — tighter on mobile */
+    @media (max-width: 480px) {
+      .topic-chip { font-size: 0.63rem; padding: 0.26rem 0.6rem; }
+      .topic-chips { margin-bottom: 0.5rem; }
+    }
+
+    /* Send button — ensure min touch target */
+    @media (max-width: 480px) {
+      .send-btn { width: 44px; height: 44px; }
+    }
+
+    /* Message bubbles — wider on mobile */
+    @media (max-width: 600px) {
+      .msg-content { max-width: 82%; }
+    }
+    @media (max-width: 400px) {
+      .msg-content { max-width: 88%; }
+      .msg-av { width: 24px; height: 24px; font-size: 0.6rem; }
+    }
+    @media (max-width: 340px) {
+      .msg-av { display: none; }
+      .msg-content { max-width: 96%; }
+    }
+
+    /* Suggestion chips: wrap properly on mobile */
+    @media (max-width: 600px) {
+      .msg-suggestions { padding-left: 0; }
+      .msg-sug-chip { white-space: normal; text-align: left; font-size: 0.68rem; }
+    }
+
+    /* Messages area padding on mobile */
+    @media (max-width: 600px) {
+      .messages-area { padding: 1rem 0; }
+      .messages-inner { padding: 0 0.875rem; }
+    }
+
+    /* Welcome screen: compact on mobile */
+    @media (max-width: 640px) {
+      .welcome-screen {
+        padding: 1.5rem 1rem;
+        min-height: auto;
+        justify-content: flex-start;
+        padding-top: 2rem;
+      }
+      .welcome-av { width: 64px; height: 64px; font-size: 1.6rem; }
+      .welcome-av-wrap { margin-bottom: 1rem; }
+      .welcome-sub { margin-bottom: 2rem; font-size: 0.875rem; }
+    }
+    @media (max-width: 400px) {
+      .welcome-av { width: 52px; height: 52px; font-size: 1.3rem; }
+      .welcome-greeting { font-size: clamp(1.35rem, 7vw, 2rem); }
+    }
+
+    /* Prompt grid: single column on small mobile */
+    @media (max-width: 420px) {
+      .prompt-grid { grid-template-columns: 1fr; gap: 0.65rem; }
+      .prompt-card { padding: 0.875rem; }
+    }
+
+    /* Scroll-to-bottom btn: adjust for taller mobile input zone */
+    @media (max-width: 768px) {
+      .scroll-btn { bottom: calc(var(--input-h) + 3.5rem); right: 1rem; }
+    }
+
+    /* Sidebar full-width on very small mobile */
+    @media (max-width: 360px) {
+      :root { --sidebar-w: 100vw; }
+      .sidebar { width: 100vw; }
+    }
+
+    /* Sidebar: slightly tighter padding on mobile */
+    @media (max-width: 480px) {
+      .sb-head { padding: 1rem 1rem 0.875rem; }
+      .sb-foot { padding: 0.875rem 1rem; }
+      .sb-history { padding: 0.875rem 0.625rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Background atmosphere -->
+<div class="bg-glow bg-glow-1" aria-hidden="true"></div>
+<div class="bg-glow bg-glow-2" aria-hidden="true"></div>
+
+<!-- Toast notification -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Mobile sidebar overlay -->
+<div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
+
+<!-- ============================================================
+     APP SHELL
+============================================================ -->
+<div class="app" role="application">
+
+  <!-- ============================================================
+       SIDEBAR
+  ============================================================ -->
+  <aside class="sidebar" id="sidebar" aria-label="Conversation history">
+
+    <!-- Sidebar Header -->
+    <div class="sb-head">
+      <div class="sb-logo">
+        <img src="logo.webp" alt="Keva The Money Coach logo" onerror="this.style.display='none'">
+        <div class="sb-logo-text">
+          Keva AI
+          <span>Financial Advisor</span>
+        </div>
+      </div>
+      <button class="new-chat-btn" id="new-chat-btn" aria-label="Start new conversation">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        New Conversation
+      </button>
+    </div>
+
+    <!-- Conversation History -->
+    <nav class="sb-history" aria-label="Previous conversations">
+
+      <div class="sb-section-label">Today</div>
+      <ul id="conv-list">
+        <li>
+          <div class="conv-item active" data-conv="1" role="button" tabindex="0" aria-current="true" aria-label="Conversation: Debt elimination strategy">
+            <div class="conv-icon">💳</div>
+            <div class="conv-meta">
+              <div class="conv-title">Debt elimination strategy</div>
+              <div class="conv-time">Just now</div>
+            </div>
+            <button class="conv-del" aria-label="Delete conversation" tabindex="-1">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+            </button>
+          </div>
+        </li>
+      </ul>
+
+      <div class="sb-section-label" style="margin-top:1.25rem;">Yesterday</div>
+      <ul>
+        <li>
+          <div class="conv-item" data-conv="2" role="button" tabindex="0" aria-label="Conversation: Retirement planning at 45">
+            <div class="conv-icon">🌅</div>
+            <div class="conv-meta">
+              <div class="conv-title">Retirement planning at 45</div>
+              <div class="conv-time">Yesterday</div>
+            </div>
+            <button class="conv-del" aria-label="Delete conversation" tabindex="-1">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+            </button>
+          </div>
+        </li>
+        <li>
+          <div class="conv-item" data-conv="3" role="button" tabindex="0" aria-label="Conversation: Building a family wealth plan">
+            <div class="conv-icon">🏠</div>
+            <div class="conv-meta">
+              <div class="conv-title">Building a family wealth plan</div>
+              <div class="conv-time">Yesterday</div>
+            </div>
+            <button class="conv-del" aria-label="Delete conversation" tabindex="-1">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+            </button>
+          </div>
+        </li>
+      </ul>
+
+      <div class="sb-section-label" style="margin-top:1.25rem;">This Week</div>
+      <ul>
+        <li>
+          <div class="conv-item" data-conv="4" role="button" tabindex="0" aria-label="Conversation: Monthly cashflow review">
+            <div class="conv-icon">💸</div>
+            <div class="conv-meta">
+              <div class="conv-title">Monthly cashflow review</div>
+              <div class="conv-time">Mar 28</div>
+            </div>
+            <button class="conv-del" aria-label="Delete conversation" tabindex="-1">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+            </button>
+          </div>
+        </li>
+        <li>
+          <div class="conv-item" data-conv="5" role="button" tabindex="0" aria-label="Conversation: How to start investing with $500">
+            <div class="conv-icon">📈</div>
+            <div class="conv-meta">
+              <div class="conv-title">How to start investing with $500</div>
+              <div class="conv-time">Mar 27</div>
+            </div>
+            <button class="conv-del" aria-label="Delete conversation" tabindex="-1">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+            </button>
+          </div>
+        </li>
+        <li>
+          <div class="conv-item" data-conv="6" role="button" tabindex="0" aria-label="Conversation: Emergency fund basics">
+            <div class="conv-icon">🛡️</div>
+            <div class="conv-meta">
+              <div class="conv-title">Emergency fund basics</div>
+              <div class="conv-time">Mar 26</div>
+            </div>
+            <button class="conv-del" aria-label="Delete conversation" tabindex="-1">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+            </button>
+          </div>
+        </li>
+      </ul>
+
+    </nav>
+
+    <!-- Sidebar Footer -->
+    <div class="sb-foot">
+      <a href="https://kssummitconsulting.com" class="sb-cta" target="_blank" rel="noopener" aria-label="Book a 1-on-1 clarity call with Keva">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        <span>Book a Clarity Call</span>
+      </a>
+      <div class="sb-user">
+        <div class="sb-user-av" aria-hidden="true">👤</div>
+        <div>
+          <div class="sb-user-name">My Account</div>
+          <div class="sb-user-status">Active</div>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ============================================================
+       MAIN CHAT AREA
+  ============================================================ -->
+  <main class="main" id="main">
+
+    <!-- Chat Header -->
+    <header class="chat-header">
+      <div class="chat-header-left">
+
+        <!-- Mobile menu button -->
+        <button class="menu-btn" id="menu-btn" aria-label="Open conversation history" aria-expanded="false" aria-controls="sidebar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+        </button>
+
+        <!-- AI Identity -->
+        <div class="ai-identity">
+          <div class="ai-av-wrap">
+            <div class="ai-av" aria-hidden="true">💰</div>
+            <div class="ai-status-dot" aria-hidden="true"></div>
+          </div>
+          <div>
+            <div class="ai-info-name">Keva AI</div>
+            <div class="ai-info-sub">
+              <span class="gdot" aria-hidden="true"></span>
+              Online · Powered by Keva The Money Coach
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="chat-header-right">
+        <a href="index.html" class="back-link header-btn" aria-label="Back to main site" title="Back to site">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12l9-9 9 9M5 10v9a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1v-9"/></svg>
+        </a>
+        <button class="header-btn" id="clear-btn" aria-label="Clear current conversation" title="Clear chat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M19 6l-1 14H6L5 6"/></svg>
+        </button>
+        <a href="https://kssummitconsulting.com" class="book-call-btn" target="_blank" rel="noopener" aria-label="Book a 1-on-1 call with Keva">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          <span>Book a Call</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- Messages Area -->
+    <div class="messages-area" id="messages-area" role="log" aria-label="Conversation" aria-live="polite">
+      <div class="messages-inner" id="messages-inner">
+
+        <!-- Welcome Screen (shown by default) -->
+        <div class="welcome-screen" id="welcome-screen">
+          <div class="welcome-av-wrap">
+            <div class="welcome-av" aria-hidden="true">💰</div>
+            <div class="welcome-online" aria-hidden="true"></div>
+          </div>
+          <h1 class="welcome-greeting">Good day, I'm <em>Keva AI</em></h1>
+          <p class="welcome-sub">Your personal financial advisor, available 24/7. Ask me anything about your money — from debt to retirement, cashflow to generational wealth.</p>
+
+          <div class="prompt-grid" role="list" aria-label="Suggested conversation starters">
+            <button class="prompt-card" role="listitem" data-prompt="I have credit card debt and I don't know where to start. Can you help me create a debt elimination plan?">
+              <span class="pc-icon">💳</span>
+              <div class="pc-title">Build a debt-free plan</div>
+              <div class="pc-sub">Get a clear roadmap to eliminate credit card and consumer debt</div>
+            </button>
+            <button class="prompt-card" role="listitem" data-prompt="I want to start planning for retirement. I'm not sure how much I need or what tools to use. Can you walk me through it?">
+              <span class="pc-icon">🌅</span>
+              <div class="pc-title">Plan my retirement</div>
+              <div class="pc-sub">Understand IRAs, 401(k)s, and how to retire on your own terms</div>
+            </button>
+            <button class="prompt-card" role="listitem" data-prompt="I want to get a better handle on my monthly cashflow. Can you help me understand where my money is going and how to manage it better?">
+              <span class="pc-icon">💸</span>
+              <div class="pc-title">Master my cashflow</div>
+              <div class="pc-sub">Stop leaking money and build a system that actually works</div>
+            </button>
+            <button class="prompt-card" role="listitem" data-prompt="How do I start building generational wealth for my family? I want my kids and grandkids to be financially secure.">
+              <span class="pc-icon">🏠</span>
+              <div class="pc-title">Build family wealth</div>
+              <div class="pc-sub">Create a wealth blueprint that spans generations</div>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Scroll to bottom button -->
+    <button class="scroll-btn" id="scroll-btn" aria-label="Scroll to latest message">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+    </button>
+
+    <!-- Input Zone -->
+    <div class="input-zone" role="form" aria-label="Send a message to Keva AI">
+      <div class="input-inner">
+
+        <!-- Quick topic chips -->
+        <div class="topic-chips" role="group" aria-label="Quick topics">
+          <button class="topic-chip" data-topic="How do I create a budget?">📊 Budgeting</button>
+          <button class="topic-chip" data-topic="What's the best way to pay off debt?">💳 Debt payoff</button>
+          <button class="topic-chip" data-topic="How do I start investing?">📈 Investing</button>
+          <button class="topic-chip" data-topic="How much do I need to save for retirement?">🌅 Retirement</button>
+          <button class="topic-chip" data-topic="How do I build an emergency fund?">🛡️ Emergency fund</button>
+          <button class="topic-chip" data-topic="What is wealth alignment and how do I achieve it?">⚖️ Wealth alignment</button>
+        </div>
+
+        <!-- Input row -->
+        <div class="input-row">
+          <textarea
+            class="input-box"
+            id="chat-input"
+            placeholder="Ask Keva AI anything about your finances…"
+            aria-label="Your message"
+            rows="1"
+            maxlength="2000"
+          ></textarea>
+          <button class="send-btn" id="send-btn" aria-label="Send message" disabled>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+          </button>
+        </div>
+
+        <!-- Input footer -->
+        <div class="input-footer">
+          <span class="input-hint">
+            Press <kbd>Enter</kbd> to send · <kbd>Shift+Enter</kbd> for new line
+          </span>
+          <span class="char-count" id="char-count" aria-live="polite"></span>
+        </div>
+
+        <p class="disclaimer">
+          Keva AI provides general financial education and guidance, not licensed financial advice.
+          For personalized planning, <a href="https://kssummitconsulting.com" target="_blank" rel="noopener">book a 1-on-1 session</a> with Keva.
+        </p>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+/* ============================================================
+   CONSTANTS & STATE
+============================================================ */
+const NO_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let messages      = [];       // { role, text, time, suggestions? }
+let isTyping      = false;
+let activeConv    = '1';
+let convCounter   = 7;        // next conversation id
+
+/* ============================================================
+   DOM REFS
+============================================================ */
+const messagesArea  = document.getElementById('messages-area');
+const messagesInner = document.getElementById('messages-inner');
+const welcomeScreen = document.getElementById('welcome-screen');
+const chatInput     = document.getElementById('chat-input');
+const sendBtn       = document.getElementById('send-btn');
+const scrollBtn     = document.getElementById('scroll-btn');
+const charCount     = document.getElementById('char-count');
+const menuBtn       = document.getElementById('menu-btn');
+const sidebar       = document.getElementById('sidebar');
+const overlay       = document.getElementById('sidebar-overlay');
+const newChatBtn    = document.getElementById('new-chat-btn');
+const clearBtn      = document.getElementById('clear-btn');
+const toast         = document.getElementById('toast');
+const convList      = document.getElementById('conv-list');
+
+/* ============================================================
+   PLACEHOLDER AI RESPONSES (swap for real API call)
+============================================================ */
+const AI_RESPONSES = [
+  {
+    text: `Great question! Let me walk you through this step by step.\n\nFirst, let's understand where you are right now. <strong>The key pillars I focus on with every client are:</strong>\n\n• **Assess your current situation** — income, expenses, debts, and assets\n• **Identify your biggest financial leak** — this is usually the fastest win\n• **Build a personalized action plan** — specific to your numbers and goals\n\nBased on what you've shared, I'd start by getting clarity on your monthly cashflow. Can you tell me roughly what your monthly take-home income is?`,
+    suggestions: ['My income is around $3,000/month', 'I want to skip to the action plan', 'What about my credit card debt?']
+  },
+  {
+    text: `That makes total sense — and you're asking exactly the right question at the right time.\n\nHere's what I want you to know: <strong>your current situation doesn't define your financial future.</strong> What matters is the next decision you make.\n\nFor this specific situation, Keva's approach is to:\n\n1. **Stop the bleeding first** — identify what's draining your cash each month\n2. **Build a 30-day sprint** — small wins that create momentum\n3. **Design your wealth blueprint** — a plan you can actually stick to\n\nWould you like me to start with a quick cashflow audit? It takes about 5 minutes and reveals everything.`,
+    suggestions: ["Yes, let's do the cashflow audit", 'Tell me more about the wealth blueprint', 'What should my savings rate be?']
+  },
+  {
+    text: `You're thinking about this exactly right.\n\nMost people make the mistake of starting too big. <strong>Keva's method starts with three numbers:</strong>\n\n• What comes in every month\n• What must go out (non-negotiable bills)\n• What's left over — your "freedom money"\n\nYour freedom money is where the real work happens. That's what we use to attack debt, build savings, and start investing — in a very specific order.\n\nBased on everything you've told me, I think a clarity call with Keva would unlock your full plan in 60 minutes. Want me to help you get that scheduled?`,
+    suggestions: ['Yes, book a clarity call', 'Can you give me the full strategy here?', 'What order should I tackle things in?']
+  }
+];
+
+let aiResponseIndex = 0;
+
+/* ============================================================
+   TIME UTILS
+============================================================ */
+const now = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+/* ============================================================
+   TOAST
+============================================================ */
+let toastTimer;
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+/* ============================================================
+   MOBILE SIDEBAR TOGGLE
+============================================================ */
+function openSidebar() {
+  sidebar.classList.add('open');
+  overlay.classList.add('visible');
+  overlay.removeAttribute('aria-hidden');
+  menuBtn.setAttribute('aria-expanded', 'true');
+  document.body.style.overflow = 'hidden';
+}
+function closeSidebar() {
+  sidebar.classList.remove('open');
+  overlay.classList.remove('visible');
+  overlay.setAttribute('aria-hidden', 'true');
+  menuBtn.setAttribute('aria-expanded', 'false');
+  document.body.style.overflow = '';
+}
+
+menuBtn.addEventListener('click', () => {
+  sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+});
+overlay.addEventListener('click', closeSidebar);
+
+/* ============================================================
+   SCROLL TO BOTTOM
+============================================================ */
+function scrollToBottom(smooth = true) {
+  messagesArea.scrollTo({
+    top: messagesArea.scrollHeight,
+    behavior: smooth && !NO_MOTION ? 'smooth' : 'auto'
+  });
+}
+
+messagesArea.addEventListener('scroll', () => {
+  const fromBottom = messagesArea.scrollHeight - messagesArea.scrollTop - messagesArea.clientHeight;
+  scrollBtn.classList.toggle('visible', fromBottom > 120);
+}, { passive: true });
+
+scrollBtn.addEventListener('click', () => scrollToBottom());
+
+/* ============================================================
+   TEXTAREA AUTO-RESIZE
+============================================================ */
+chatInput.addEventListener('input', () => {
+  chatInput.style.height = 'auto';
+  chatInput.style.height = Math.min(chatInput.scrollHeight, 160) + 'px';
+
+  const val = chatInput.value.trim();
+  const len = chatInput.value.length;
+
+  sendBtn.disabled = !val;
+  sendBtn.classList.toggle('ready', !!val);
+
+  charCount.textContent = len > 1800 ? `${len}/2000` : '';
+});
+
+/* ============================================================
+   RENDER WELCOME STATE
+============================================================ */
+function showWelcome() {
+  welcomeScreen.style.display = 'flex';
+}
+function hideWelcome() {
+  if (welcomeScreen && welcomeScreen.style.display !== 'none') {
+    welcomeScreen.style.display = 'none';
+  }
+}
+
+/* ============================================================
+   RENDER A MESSAGE
+============================================================ */
+function renderMessage({ role, text, time, suggestions }) {
+  hideWelcome();
+
+  const group = document.createElement('div');
+  group.className = 'msg-group';
+
+  const row = document.createElement('div');
+  row.className = `msg-row ${role}`;
+
+  /* Avatar */
+  const av = document.createElement('div');
+  av.className = `msg-av ${role === 'ai' ? 'ai-av-sm' : 'user-av-sm'}`;
+  av.setAttribute('aria-hidden', 'true');
+  av.textContent = role === 'ai' ? '💰' : '👤';
+
+  /* Bubble content */
+  const content = document.createElement('div');
+  content.className = 'msg-content';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble';
+  bubble.innerHTML = formatText(text);
+
+  const meta = document.createElement('div');
+  meta.className = 'msg-meta';
+
+  const timeEl = document.createElement('span');
+  timeEl.className = 'msg-time';
+  timeEl.textContent = time;
+  timeEl.setAttribute('aria-label', `Sent at ${time}`);
+
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'msg-copy';
+  copyBtn.setAttribute('aria-label', 'Copy message');
+  copyBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>`;
+  copyBtn.addEventListener('click', () => {
+    navigator.clipboard?.writeText(text).then(() => {
+      copyBtn.classList.add('copied');
+      copyBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>`;
+      showToast('Copied to clipboard');
+      setTimeout(() => {
+        copyBtn.classList.remove('copied');
+        copyBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>`;
+      }, 2000);
+    });
+  });
+
+  if (role === 'ai') {
+    meta.appendChild(timeEl);
+    meta.appendChild(copyBtn);
+  } else {
+    meta.appendChild(copyBtn);
+    meta.appendChild(timeEl);
+  }
+
+  content.appendChild(bubble);
+  content.appendChild(meta);
+
+  row.appendChild(av);
+  row.appendChild(content);
+  group.appendChild(row);
+
+  /* Suggested follow-ups (AI only) */
+  if (role === 'ai' && suggestions?.length) {
+    const sugs = document.createElement('div');
+    sugs.className = 'msg-suggestions';
+    sugs.setAttribute('role', 'group');
+    sugs.setAttribute('aria-label', 'Follow-up suggestions');
+    suggestions.forEach(s => {
+      const chip = document.createElement('button');
+      chip.className = 'msg-sug-chip';
+      chip.textContent = s;
+      chip.addEventListener('click', () => {
+        chatInput.value = s;
+        chatInput.dispatchEvent(new Event('input'));
+        handleSend();
+      });
+      sugs.appendChild(chip);
+    });
+    group.appendChild(sugs);
+  }
+
+  messagesInner.appendChild(group);
+  scrollToBottom();
+  return group;
+}
+
+/* ============================================================
+   FORMAT TEXT (markdown-lite)
+============================================================ */
+function formatText(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n• /g, '</p><ul><li>').replace(/\n/g, '</li><li>')
+    .replace(/<\/li><li>(?!<)/g, '</li></ul><p>')
+    .replace(/^/, '<p>').replace(/$/, '</p>')
+    .replace(/<p><\/p>/g, '')
+    .replace(/<ul><li>([^<]*)<\/li><li>/g, '<ul><li>$1</li><li>');
+}
+
+/* ============================================================
+   TYPING INDICATOR
+============================================================ */
+function showTyping() {
+  isTyping = true;
+  const row = document.createElement('div');
+  row.className = 'typing-row';
+  row.id = 'typing-row';
+
+  const av = document.createElement('div');
+  av.className = 'msg-av ai-av-sm';
+  av.setAttribute('aria-hidden', 'true');
+  av.textContent = '💰';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'typing-bubble';
+  bubble.setAttribute('aria-label', 'Keva AI is typing');
+  bubble.innerHTML = `<div class="tdot"></div><div class="tdot"></div><div class="tdot"></div>`;
+
+  row.appendChild(av);
+  row.appendChild(bubble);
+  messagesInner.appendChild(row);
+  scrollToBottom();
+}
+
+function hideTyping() {
+  isTyping = false;
+  const row = document.getElementById('typing-row');
+  if (row) row.remove();
+}
+
+/* ============================================================
+   SEND MESSAGE
+============================================================ */
+async function handleSend() {
+  const text = chatInput.value.trim();
+  if (!text || isTyping) return;
+
+  /* Render user message */
+  const userMsg = { role: 'user', text, time: now() };
+  messages.push(userMsg);
+  renderMessage(userMsg);
+
+  /* Reset input */
+  chatInput.value = '';
+  chatInput.style.height = 'auto';
+  sendBtn.disabled = true;
+  sendBtn.classList.remove('ready');
+  charCount.textContent = '';
+  chatInput.focus();
+
+  /* Show typing */
+  showTyping();
+
+  /* Simulate AI response delay (replace with real API call) */
+  const delay = 1200 + Math.random() * 1000;
+  await sleep(delay);
+  hideTyping();
+
+  /* Render AI response */
+  const resp = AI_RESPONSES[aiResponseIndex % AI_RESPONSES.length];
+  aiResponseIndex++;
+
+  const aiMsg = { role: 'ai', text: resp.text, time: now(), suggestions: resp.suggestions };
+  messages.push(aiMsg);
+  renderMessage(aiMsg);
+
+  /* Update sidebar conversation title */
+  updateActiveConvTitle(text);
+}
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* ============================================================
+   UPDATE SIDEBAR CONVERSATION TITLE
+============================================================ */
+function updateActiveConvTitle(text) {
+  const titleEl = document.querySelector(`.conv-item[data-conv="${activeConv}"] .conv-title`);
+  if (titleEl && text) {
+    titleEl.textContent = text.length > 30 ? text.slice(0, 30) + '…' : text;
+  }
+}
+
+/* ============================================================
+   SEND BUTTON + KEYBOARD
+============================================================ */
+sendBtn.addEventListener('click', handleSend);
+
+chatInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    handleSend();
+  }
+});
+
+/* ============================================================
+   CLEAR CONVERSATION
+============================================================ */
+function clearConversation() {
+  messages = [];
+  aiResponseIndex = 0;
+
+  /* Remove all message groups */
+  const groups = messagesInner.querySelectorAll('.msg-group, .date-divider, .typing-row');
+  groups.forEach(g => g.remove());
+
+  /* Show welcome */
+  welcomeScreen.style.display = 'flex';
+  isTyping = false;
+}
+
+clearBtn.addEventListener('click', clearConversation);
+
+/* ============================================================
+   NEW CONVERSATION
+============================================================ */
+newChatBtn.addEventListener('click', () => {
+  /* Deactivate current */
+  document.querySelectorAll('.conv-item').forEach(i => {
+    i.classList.remove('active');
+    i.removeAttribute('aria-current');
+  });
+
+  /* Create new sidebar item */
+  const id = convCounter++;
+  const li = document.createElement('li');
+  li.innerHTML = `
+    <div class="conv-item active" data-conv="${id}" role="button" tabindex="0" aria-current="true" aria-label="New conversation">
+      <div class="conv-icon">💬</div>
+      <div class="conv-meta">
+        <div class="conv-title">New conversation</div>
+        <div class="conv-time">Just now</div>
+      </div>
+      <button class="conv-del" aria-label="Delete conversation" tabindex="-1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+      </button>
+    </div>`;
+  convList.insertBefore(li, convList.firstChild);
+
+  activeConv = String(id);
+  clearConversation();
+  closeSidebar();
+  chatInput.focus();
+
+  showToast('New conversation started');
+});
+
+/* ============================================================
+   CONVERSATION HISTORY — CLICK TO SWITCH
+============================================================ */
+document.addEventListener('click', e => {
+  const item = e.target.closest('.conv-item');
+  const del  = e.target.closest('.conv-del');
+
+  if (del) {
+    e.stopPropagation();
+    const li = del.closest('li');
+    if (li) {
+      li.style.opacity = '0';
+      li.style.transform = 'translateX(-10px)';
+      li.style.transition = 'opacity 0.2s, transform 0.2s';
+      setTimeout(() => li.remove(), 200);
+      showToast('Conversation deleted');
+    }
+    return;
+  }
+
+  if (item) {
+    document.querySelectorAll('.conv-item').forEach(i => {
+      i.classList.remove('active');
+      i.removeAttribute('aria-current');
+    });
+    item.classList.add('active');
+    item.setAttribute('aria-current', 'true');
+    activeConv = item.dataset.conv;
+    closeSidebar();
+
+    /* In production: load actual conversation from state/API */
+    clearConversation();
+    showToast('Conversation loaded');
+  }
+});
+
+/* ============================================================
+   PROMPT CARDS (welcome screen)
+============================================================ */
+document.querySelectorAll('.prompt-card').forEach(card => {
+  card.addEventListener('click', () => {
+    chatInput.value = card.dataset.prompt;
+    chatInput.dispatchEvent(new Event('input'));
+    handleSend();
+  });
+});
+
+/* ============================================================
+   TOPIC CHIPS
+============================================================ */
+document.querySelectorAll('.topic-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    chatInput.value = chip.dataset.topic;
+    chatInput.dispatchEvent(new Event('input'));
+    chatInput.focus();
+  });
+});
+
+/* ============================================================
+   SUGGESTION CHIPS (delegated, since they're added dynamically)
+============================================================ */
+messagesInner.addEventListener('click', e => {
+  const chip = e.target.closest('.msg-sug-chip');
+  if (chip) {
+    chatInput.value = chip.textContent;
+    chatInput.dispatchEvent(new Event('input'));
+    handleSend();
+  }
+});
+
+/* ============================================================
+   KEYBOARD: SIDEBAR CONV ITEMS
+============================================================ */
+document.addEventListener('keydown', e => {
+  const item = e.target.closest('.conv-item');
+  if (item && (e.key === 'Enter' || e.key === ' ')) {
+    e.preventDefault();
+    item.click();
+  }
+});
+
+/* ============================================================
+   AUTO-START FROM URL PARAM (?q=your+question)
+============================================================ */
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const q = params.get('q');
+  if (q) {
+    chatInput.value = q;
+    chatInput.dispatchEvent(new Event('input'));
+    setTimeout(() => handleSend(), 400);
+    /* Clean URL without reload */
+    history.replaceState(null, '', window.location.pathname);
+  } else {
+    chatInput.focus();
+  }
+});
+</script>
+
+</body>
+</html>
