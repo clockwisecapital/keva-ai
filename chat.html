@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
   <style>
     /* ============================================================
@@ -918,6 +919,65 @@
       .sb-foot { padding: 0.875rem 1rem; }
       .sb-history { padding: 0.875rem 0.625rem; }
     }
+
+    /* ============================================================
+       KRONOS: IN-CHAT BOOK-CALL CTA + TURNSTILE GATE
+    ============================================================ */
+    .kronos-book-cta {
+      display: inline-flex; align-items: center; gap: 0.45rem;
+      margin-top: 0.75rem;
+      padding: 0.6rem 1.1rem;
+      background: linear-gradient(135deg, var(--gold), #c49020);
+      color: var(--bg);
+      font-size: 0.78rem; font-weight: 700;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      border-radius: 10px;
+      transition: opacity 0.2s, transform 0.15s var(--spring);
+      cursor: pointer;
+    }
+    .kronos-book-cta:hover { opacity: 0.9; transform: translateY(-1px); }
+    .kronos-book-cta svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+    .kronos-error-bubble {
+      padding: 0.75rem 1.1rem;
+      background: rgba(248,113,113,0.08);
+      border: 1px solid rgba(248,113,113,0.25);
+      border-radius: 10px;
+      color: #fca5a5; font-size: 0.85rem;
+      margin-top: 0.5rem;
+    }
+    .kronos-error-bubble button {
+      margin-left: 0.5rem; padding: 0.15rem 0.55rem;
+      background: rgba(248,113,113,0.18);
+      color: #fca5a5; border-radius: 6px;
+      font-size: 0.72rem; font-weight: 600;
+    }
+
+    .kronos-gate {
+      position: fixed; inset: 0; z-index: 900;
+      background: rgba(5,8,16,0.85); backdrop-filter: blur(10px);
+      display: none; align-items: center; justify-content: center;
+      padding: 1rem;
+    }
+    .kronos-gate.visible { display: flex; }
+    .kronos-gate-card {
+      background: var(--bg-3);
+      border: 1px solid var(--gold-border);
+      border-radius: 14px;
+      padding: 1.5rem 1.5rem 1.25rem;
+      max-width: 380px; width: 100%;
+      text-align: center;
+    }
+    .kronos-gate-title {
+      font-family: var(--serif);
+      font-size: 1.2rem; font-weight: 700;
+      color: var(--white); margin-bottom: 0.4rem;
+    }
+    .kronos-gate-sub {
+      font-size: 0.82rem; color: var(--white-70);
+      line-height: 1.55; margin-bottom: 1rem;
+    }
+    #kronos-turnstile { display: flex; justify-content: center; min-height: 65px; }
   </style>
 </head>
 <body>
@@ -928,6 +988,15 @@
 
 <!-- Toast notification -->
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Kronos: Turnstile gate for walk-in sessions (hidden for handoff flow) -->
+<div class="kronos-gate" id="kronos-gate" aria-hidden="true" aria-labelledby="kronos-gate-title">
+  <div class="kronos-gate-card">
+    <div class="kronos-gate-title" id="kronos-gate-title">One quick check</div>
+    <div class="kronos-gate-sub">We just need to confirm you're not a bot before starting the chat.</div>
+    <div id="kronos-turnstile"></div>
+  </div>
+</div>
 
 <!-- Mobile sidebar overlay -->
 <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
@@ -1048,7 +1117,7 @@
 
     <!-- Sidebar Footer -->
     <div class="sb-foot">
-      <a href="https://kssummitconsulting.com" class="sb-cta" target="_blank" rel="noopener" aria-label="Book a 1-on-1 clarity call with Keva">
+      <a href="#" class="sb-cta" target="_blank" rel="noopener" aria-label="Book a 1-on-1 clarity call with Keva" data-kronos-book="1">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
         <span>Book a Clarity Call</span>
       </a>
@@ -1101,7 +1170,7 @@
         <button class="header-btn" id="clear-btn" aria-label="Clear current conversation" title="Clear chat">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M19 6l-1 14H6L5 6"/></svg>
         </button>
-        <a href="https://kssummitconsulting.com" class="book-call-btn" target="_blank" rel="noopener" aria-label="Book a 1-on-1 call with Keva">
+        <a href="#" class="book-call-btn" target="_blank" rel="noopener" aria-label="Book a 1-on-1 call with Keva" data-kronos-book="1">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
           <span>Book a Call</span>
         </a>
@@ -1203,18 +1272,22 @@
 
 <script>
 /* ============================================================
-   CONSTANTS & STATE
+   CONSTANTS & STATE — Kronos partner API integration
 ============================================================ */
+const KRONOS_API         = 'https://kronos.clockwisecapital.com';
+const PARTNER_KEY        = 'pk_keva_public_REPLACE_ME';
+const PARTNER_SLUG       = 'keva-ai';
+const TURNSTILE_SITE_KEY = 'REPLACE_ME';
+
 const NO_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-let messages      = [];       // { role, text, time, suggestions? }
-let isTyping      = false;
-let activeConv    = '1';
-let convCounter   = 7;        // next conversation id
+let partnerSessionId = null;
+let bookingUrl       = null;
+let isTyping         = false;
+let activeConv       = '1';
+let convCounter      = 7;
 
-/* ============================================================
-   DOM REFS
-============================================================ */
+/* DOM refs */
 const messagesArea  = document.getElementById('messages-area');
 const messagesInner = document.getElementById('messages-inner');
 const welcomeScreen = document.getElementById('welcome-screen');
@@ -1229,35 +1302,12 @@ const newChatBtn    = document.getElementById('new-chat-btn');
 const clearBtn      = document.getElementById('clear-btn');
 const toast         = document.getElementById('toast');
 const convList      = document.getElementById('conv-list');
+const gateEl        = document.getElementById('kronos-gate');
 
-/* ============================================================
-   PLACEHOLDER AI RESPONSES (swap for real API call)
-============================================================ */
-const AI_RESPONSES = [
-  {
-    text: `Great question! Let me walk you through this step by step.\n\nUsing Kronos, I'm able to map your exact situation and surface the highest-impact moves fast. <strong>The key pillars I focus on with every client are:</strong>\n\n• **Assess your current situation** — income, expenses, debts, and assets\n• **Identify your biggest financial leak** — this is usually the fastest win\n• **Build a personalized action plan** — specific to your numbers and goals\n\nBased on what you've shared, I'd start by getting clarity on your monthly cashflow. Can you tell me roughly what your monthly take-home income is?`,
-    suggestions: ['My income is around $3,000/month', 'I want to skip to the action plan', 'What about my credit card debt?']
-  },
-  {
-    text: `That makes total sense — and you're asking exactly the right question at the right time.\n\nHere's what I want you to know: <strong>your current situation doesn't define your financial future.</strong> What matters is the next decision you make.\n\nFor this specific situation, Keva's approach is to:\n\n1. **Stop the bleeding first** — identify what's draining your cash each month\n2. **Build a 30-day sprint** — small wins that create momentum\n3. **Design your wealth blueprint** — a plan you can actually stick to\n\nWould you like me to start with a quick cashflow audit? It takes about 5 minutes and reveals everything.`,
-    suggestions: ["Yes, let's do the cashflow audit", 'Tell me more about the wealth blueprint', 'What should my savings rate be?']
-  },
-  {
-    text: `You're thinking about this exactly right.\n\nMost people make the mistake of starting too big. <strong>The Kronos framework starts with three numbers:</strong>\n\n• What comes in every month\n• What must go out (non-negotiable bills)\n• What's left over — your "freedom money"\n\nYour freedom money is where the real work happens. That's what we use to attack debt, build savings, and start investing — in a very specific order.\n\nBased on everything you've told me, I think a clarity call with Keva would unlock your full plan in 60 minutes. Want me to help you get that scheduled?`,
-    suggestions: ['Yes, book a clarity call', 'Can you give me the full strategy here?', 'What order should I tackle things in?']
-  }
-];
+const now   = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-let aiResponseIndex = 0;
-
-/* ============================================================
-   TIME UTILS
-============================================================ */
-const now = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-/* ============================================================
-   TOAST
-============================================================ */
+/* Toast */
 let toastTimer;
 function showToast(msg) {
   toast.textContent = msg;
@@ -1266,364 +1316,320 @@ function showToast(msg) {
   toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
 }
 
-/* ============================================================
-   MOBILE SIDEBAR TOGGLE
-============================================================ */
-function openSidebar() {
-  sidebar.classList.add('open');
-  overlay.classList.add('visible');
-  overlay.removeAttribute('aria-hidden');
-  menuBtn.setAttribute('aria-expanded', 'true');
-  document.body.style.overflow = 'hidden';
-}
-function closeSidebar() {
-  sidebar.classList.remove('open');
-  overlay.classList.remove('visible');
-  overlay.setAttribute('aria-hidden', 'true');
-  menuBtn.setAttribute('aria-expanded', 'false');
-  document.body.style.overflow = '';
-}
-
-menuBtn.addEventListener('click', () => {
-  sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
-});
+/* Mobile sidebar */
+function openSidebar()  { sidebar.classList.add('open');    overlay.classList.add('visible');    overlay.removeAttribute('aria-hidden'); menuBtn.setAttribute('aria-expanded','true');  document.body.style.overflow='hidden'; }
+function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('visible'); overlay.setAttribute('aria-hidden','true');  menuBtn.setAttribute('aria-expanded','false'); document.body.style.overflow=''; }
+menuBtn.addEventListener('click', () => { sidebar.classList.contains('open') ? closeSidebar() : openSidebar(); });
 overlay.addEventListener('click', closeSidebar);
 
-/* ============================================================
-   SCROLL TO BOTTOM
-============================================================ */
+/* Scroll + input */
 function scrollToBottom(smooth = true) {
-  messagesArea.scrollTo({
-    top: messagesArea.scrollHeight,
-    behavior: smooth && !NO_MOTION ? 'smooth' : 'auto'
-  });
+  messagesArea.scrollTo({ top: messagesArea.scrollHeight, behavior: smooth && !NO_MOTION ? 'smooth' : 'auto' });
 }
-
 messagesArea.addEventListener('scroll', () => {
   const fromBottom = messagesArea.scrollHeight - messagesArea.scrollTop - messagesArea.clientHeight;
   scrollBtn.classList.toggle('visible', fromBottom > 120);
 }, { passive: true });
-
 scrollBtn.addEventListener('click', () => scrollToBottom());
 
-/* ============================================================
-   TEXTAREA AUTO-RESIZE
-============================================================ */
 chatInput.addEventListener('input', () => {
   chatInput.style.height = 'auto';
   chatInput.style.height = Math.min(chatInput.scrollHeight, 160) + 'px';
-
-  const val = chatInput.value.trim();
-  const len = chatInput.value.length;
-
-  sendBtn.disabled = !val;
-  sendBtn.classList.toggle('ready', !!val);
-
-  charCount.textContent = len > 1800 ? `${len}/2000` : '';
+  const val = chatInput.value.trim(); const len = chatInput.value.length;
+  sendBtn.disabled = !val || !partnerSessionId;
+  sendBtn.classList.toggle('ready', !!val && !!partnerSessionId);
+  charCount.textContent = len > 1800 ? (len + '/2000') : '';
 });
 
-/* ============================================================
-   RENDER WELCOME STATE
-============================================================ */
-function showWelcome() {
-  welcomeScreen.style.display = 'flex';
-}
 function hideWelcome() {
-  if (welcomeScreen && welcomeScreen.style.display !== 'none') {
-    welcomeScreen.style.display = 'none';
-  }
+  if (welcomeScreen && welcomeScreen.style.display !== 'none') welcomeScreen.style.display = 'none';
 }
 
 /* ============================================================
-   RENDER A MESSAGE
+   SENTINEL STRIPPING — runs once per render; safe to call on partial buffers.
 ============================================================ */
-function renderMessage({ role, text, time, suggestions }) {
-  hideWelcome();
-
-  const group = document.createElement('div');
-  group.className = 'msg-group';
-
-  const row = document.createElement('div');
-  row.className = `msg-row ${role}`;
-
-  /* Avatar */
-  const av = document.createElement('div');
-  av.className = `msg-av ${role === 'ai' ? 'ai-av-sm' : 'user-av-sm'}`;
-  av.setAttribute('aria-hidden', 'true');
-  av.textContent = role === 'ai' ? '💰' : '👤';
-
-  /* Bubble content */
-  const content = document.createElement('div');
-  content.className = 'msg-content';
-
-  const bubble = document.createElement('div');
-  bubble.className = 'msg-bubble';
-  bubble.innerHTML = formatText(text);
-
-  const meta = document.createElement('div');
-  meta.className = 'msg-meta';
-
-  const timeEl = document.createElement('span');
-  timeEl.className = 'msg-time';
-  timeEl.textContent = time;
-  timeEl.setAttribute('aria-label', `Sent at ${time}`);
-
-  const copyBtn = document.createElement('button');
-  copyBtn.className = 'msg-copy';
-  copyBtn.setAttribute('aria-label', 'Copy message');
-  copyBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>`;
-  copyBtn.addEventListener('click', () => {
-    navigator.clipboard?.writeText(text).then(() => {
-      copyBtn.classList.add('copied');
-      copyBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>`;
-      showToast('Copied to clipboard');
-      setTimeout(() => {
-        copyBtn.classList.remove('copied');
-        copyBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>`;
-      }, 2000);
-    });
-  });
-
-  if (role === 'ai') {
-    meta.appendChild(timeEl);
-    meta.appendChild(copyBtn);
-  } else {
-    meta.appendChild(copyBtn);
-    meta.appendChild(timeEl);
-  }
-
-  content.appendChild(bubble);
-  content.appendChild(meta);
-
-  row.appendChild(av);
-  row.appendChild(content);
-  group.appendChild(row);
-
-  /* Suggested follow-ups (AI only) */
-  if (role === 'ai' && suggestions?.length) {
-    const sugs = document.createElement('div');
-    sugs.className = 'msg-suggestions';
-    sugs.setAttribute('role', 'group');
-    sugs.setAttribute('aria-label', 'Follow-up suggestions');
-    suggestions.forEach(s => {
-      const chip = document.createElement('button');
-      chip.className = 'msg-sug-chip';
-      chip.textContent = s;
-      chip.addEventListener('click', () => {
-        chatInput.value = s;
-        chatInput.dispatchEvent(new Event('input'));
-        handleSend();
-      });
-      sugs.appendChild(chip);
-    });
-    group.appendChild(sugs);
-  }
-
-  messagesInner.appendChild(group);
-  scrollToBottom();
-  return group;
+function stripSentinels(text) {
+  const hasBookCall = /\[\[BOOK_CALL\]\]/.test(text);
+  const cleaned = text
+    .replace(/\[\[BOOK_CALL\]\]/g, '')
+    .replace(/\[\[ADVISOR_PICKER\]\]/g, '')
+    .replace(/<!--\s*urgency:\s*\d+\s*-->/g, '')
+    .trim();
+  return { cleaned, hasBookCall };
 }
 
-/* ============================================================
-   FORMAT TEXT (markdown-lite)
-============================================================ */
+/* Markdown-lite formatter (reused from placeholder version) */
 function formatText(text) {
   return text
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\n\n/g, '</p><p>')
-    .replace(/\n• /g, '</p><ul><li>').replace(/\n/g, '</li><li>')
+    .replace(/\n\u2022 /g, '</p><ul><li>').replace(/\n/g, '</li><li>')
     .replace(/<\/li><li>(?!<)/g, '</li></ul><p>')
     .replace(/^/, '<p>').replace(/$/, '</p>')
     .replace(/<p><\/p>/g, '')
     .replace(/<ul><li>([^<]*)<\/li><li>/g, '<ul><li>$1</li><li>');
 }
 
-/* ============================================================
-   TYPING INDICATOR
-============================================================ */
+/* Render a message; returns {group,bubble} so streaming can update the bubble in place. */
+function renderMessage({ role, text }) {
+  hideWelcome();
+  const group = document.createElement('div'); group.className = 'msg-group';
+  const row   = document.createElement('div'); row.className = 'msg-row ' + role;
+  const av    = document.createElement('div');
+  av.className = 'msg-av ' + (role === 'ai' ? 'ai-av-sm' : 'user-av-sm');
+  av.setAttribute('aria-hidden', 'true');
+  av.textContent = role === 'ai' ? '\u{1F4B0}' : '\u{1F464}';
+
+  const content = document.createElement('div'); content.className = 'msg-content';
+  const bubble  = document.createElement('div'); bubble.className  = 'msg-bubble';
+  bubble.innerHTML = text ? formatText(text) : '';
+  const meta    = document.createElement('div'); meta.className    = 'msg-meta';
+  const timeEl  = document.createElement('span'); timeEl.className = 'msg-time';
+  timeEl.textContent = now();
+  meta.appendChild(timeEl);
+
+  content.appendChild(bubble); content.appendChild(meta);
+  row.appendChild(av); row.appendChild(content);
+  group.appendChild(row);
+  messagesInner.appendChild(group);
+  scrollToBottom();
+  return { group, bubble };
+}
+
+/* Typing indicator */
 function showTyping() {
   isTyping = true;
-  const row = document.createElement('div');
-  row.className = 'typing-row';
-  row.id = 'typing-row';
-
-  const av = document.createElement('div');
-  av.className = 'msg-av ai-av-sm';
-  av.setAttribute('aria-hidden', 'true');
-  av.textContent = '💰';
-
-  const bubble = document.createElement('div');
-  bubble.className = 'typing-bubble';
+  const row = document.createElement('div'); row.className = 'typing-row'; row.id = 'typing-row';
+  const av  = document.createElement('div'); av.className = 'msg-av ai-av-sm'; av.setAttribute('aria-hidden','true');
+  av.textContent = '\u{1F4B0}';
+  const bubble = document.createElement('div'); bubble.className = 'typing-bubble';
   bubble.setAttribute('aria-label', 'Keva is typing');
-  bubble.innerHTML = `<div class="tdot"></div><div class="tdot"></div><div class="tdot"></div>`;
+  bubble.innerHTML = '<div class="tdot"></div><div class="tdot"></div><div class="tdot"></div>';
+  row.appendChild(av); row.appendChild(bubble);
+  messagesInner.appendChild(row); scrollToBottom();
+}
+function hideTyping() {
+  isTyping = false;
+  const r = document.getElementById('typing-row'); if (r) r.remove();
+}
 
-  row.appendChild(av);
-  row.appendChild(bubble);
-  messagesInner.appendChild(row);
+/* Inline Book-a-Call CTA, rendered when [[BOOK_CALL]] sentinel appears in a message */
+function renderBookCallCTA(parentGroup) {
+  const btn = document.createElement('button');
+  btn.className = 'kronos-book-cta';
+  btn.setAttribute('data-kronos-book', '1');
+  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span>Book a Call</span>';
+  parentGroup.appendChild(btn);
+}
+
+/* All book-a-call clicks (header, sidebar, inline CTA) route through this handler */
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-kronos-book]');
+  if (!el) return;
+  e.preventDefault();
+  openBookingFlow();
+});
+
+async function openBookingFlow() {
+  if (!bookingUrl) { showToast('Booking link not ready yet — please try again.'); return; }
+  // Fire-and-forget: don't block the user from getting to Calendly.
+  try {
+    fetch(KRONOS_API + '/api/partner/booking-intent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-partner-key': PARTNER_KEY },
+      body: JSON.stringify({ partnerSessionId }),
+      keepalive: true
+    }).catch(() => {});
+  } catch (_) {}
+  window.open(bookingUrl, '_blank', 'noopener');
+}
+
+/* ============================================================
+   SESSION REDEEM
+============================================================ */
+async function redeemSession(body) {
+  const res = await fetch(KRONOS_API + '/api/partner/session/redeem', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-partner-key': PARTNER_KEY },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) throw new Error('redeem failed: ' + res.status);
+  return res.json();
+}
+
+function onSessionReady(data) {
+  partnerSessionId = data.partnerSessionId;
+  bookingUrl       = data.bookingUrl || null;
+  if (gateEl) { gateEl.classList.remove('visible'); gateEl.setAttribute('aria-hidden','true'); }
+  chatInput.disabled = false;
+  chatInput.focus();
+  if (data.greeting) renderMessage({ role: 'ai', text: data.greeting });
+}
+
+function onSessionFailure() {
+  renderMessage({ role: 'ai', text: 'Unable to start chat right now — please refresh.' });
+  chatInput.disabled = true;
+}
+
+/* ============================================================
+   TURNSTILE GATE (walk-in only)
+============================================================ */
+function showTurnstileGate() {
+  if (!gateEl) return;
+  gateEl.classList.add('visible');
+  gateEl.removeAttribute('aria-hidden');
+  const mount = document.getElementById('kronos-turnstile');
+  mount.innerHTML = '';
+  const renderWhenReady = () => {
+    if (!window.turnstile) { setTimeout(renderWhenReady, 150); return; }
+    window.turnstile.render(mount, {
+      sitekey: TURNSTILE_SITE_KEY,
+      theme: 'dark',
+      callback: async (token) => {
+        try {
+          const data = await redeemSession({ walkIn: true, turnstileToken: token });
+          onSessionReady(data);
+        } catch (err) {
+          onSessionFailure();
+        }
+      }
+    });
+  };
+  renderWhenReady();
+}
+
+/* ============================================================
+   STREAMING CHAT
+============================================================ */
+async function streamChat(userText) {
+  showTyping();
+  let res;
+  try {
+    res = await fetch(KRONOS_API + '/api/partner/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-partner-key': PARTNER_KEY },
+      body: JSON.stringify({ partnerSessionId, message: userText })
+    });
+    if (!res.ok || !res.body) throw new Error('chat http ' + res.status);
+  } catch (err) {
+    hideTyping();
+    renderError('Network error — please try again.', userText);
+    return;
+  }
+
+  hideTyping();
+  const { group, bubble } = renderMessage({ role: 'ai', text: '' });
+  const reader  = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let lastRender = 0;
+
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const t = performance.now();
+      if (t - lastRender > 30) {
+        lastRender = t;
+        const { cleaned } = stripSentinels(buffer);
+        bubble.innerHTML = formatText(cleaned);
+        scrollToBottom(false);
+      }
+    }
+  } catch (err) {
+    renderError('Connection dropped mid-reply — please try again.', userText);
+    return;
+  }
+
+  /* Final flush + sentinel handling */
+  const { cleaned, hasBookCall } = stripSentinels(buffer);
+  bubble.innerHTML = formatText(cleaned);
+  if (hasBookCall) renderBookCallCTA(group);
+  scrollToBottom();
+  updateActiveConvTitle(userText);
+}
+
+function renderError(msg, lastUserText) {
+  const wrap = document.createElement('div'); wrap.className = 'msg-group';
+  wrap.innerHTML = '<div class="kronos-error-bubble">' + msg + ' <button type="button">Retry</button></div>';
+  wrap.querySelector('button').addEventListener('click', () => { wrap.remove(); streamChat(lastUserText); });
+  messagesInner.appendChild(wrap);
   scrollToBottom();
 }
 
-function hideTyping() {
-  isTyping = false;
-  const row = document.getElementById('typing-row');
-  if (row) row.remove();
-}
-
 /* ============================================================
-   SEND MESSAGE
+   SEND
 ============================================================ */
 async function handleSend() {
   const text = chatInput.value.trim();
-  if (!text || isTyping) return;
-
-  /* Render user message */
-  const userMsg = { role: 'user', text, time: now() };
-  messages.push(userMsg);
-  renderMessage(userMsg);
-
-  /* Reset input */
+  if (!text || isTyping || !partnerSessionId) return;
+  renderMessage({ role: 'user', text });
   chatInput.value = '';
   chatInput.style.height = 'auto';
   sendBtn.disabled = true;
   sendBtn.classList.remove('ready');
   charCount.textContent = '';
   chatInput.focus();
-
-  /* Show typing */
-  showTyping();
-
-  /* Simulate AI response delay (replace with real API call) */
-  const delay = 1200 + Math.random() * 1000;
-  await sleep(delay);
-  hideTyping();
-
-  /* Render AI response */
-  const resp = AI_RESPONSES[aiResponseIndex % AI_RESPONSES.length];
-  aiResponseIndex++;
-
-  const aiMsg = { role: 'ai', text: resp.text, time: now(), suggestions: resp.suggestions };
-  messages.push(aiMsg);
-  renderMessage(aiMsg);
-
-  /* Update sidebar conversation title */
-  updateActiveConvTitle(text);
+  await streamChat(text);
 }
-
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-
-/* ============================================================
-   UPDATE SIDEBAR CONVERSATION TITLE
-============================================================ */
-function updateActiveConvTitle(text) {
-  const titleEl = document.querySelector(`.conv-item[data-conv="${activeConv}"] .conv-title`);
-  if (titleEl && text) {
-    titleEl.textContent = text.length > 30 ? text.slice(0, 30) + '…' : text;
-  }
-}
-
-/* ============================================================
-   SEND BUTTON + KEYBOARD
-============================================================ */
 sendBtn.addEventListener('click', handleSend);
-
 chatInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    handleSend();
-  }
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
 });
 
-/* ============================================================
-   CLEAR CONVERSATION
-============================================================ */
+/* Sidebar conversation UI — purely cosmetic; session is fixed per page load */
 function clearConversation() {
-  messages = [];
-  aiResponseIndex = 0;
-
-  /* Remove all message groups */
-  const groups = messagesInner.querySelectorAll('.msg-group, .date-divider, .typing-row');
-  groups.forEach(g => g.remove());
-
-  /* Show welcome */
+  messagesInner.querySelectorAll('.msg-group, .date-divider, .typing-row').forEach(g => g.remove());
   welcomeScreen.style.display = 'flex';
   isTyping = false;
 }
-
 clearBtn.addEventListener('click', clearConversation);
 
-/* ============================================================
-   NEW CONVERSATION
-============================================================ */
 newChatBtn.addEventListener('click', () => {
-  /* Deactivate current */
-  document.querySelectorAll('.conv-item').forEach(i => {
-    i.classList.remove('active');
-    i.removeAttribute('aria-current');
-  });
-
-  /* Create new sidebar item */
+  document.querySelectorAll('.conv-item').forEach(i => { i.classList.remove('active'); i.removeAttribute('aria-current'); });
   const id = convCounter++;
   const li = document.createElement('li');
-  li.innerHTML = `
-    <div class="conv-item active" data-conv="${id}" role="button" tabindex="0" aria-current="true" aria-label="New conversation">
-      <div class="conv-icon">💬</div>
-      <div class="conv-meta">
-        <div class="conv-title">New conversation</div>
-        <div class="conv-time">Just now</div>
-      </div>
-      <button class="conv-del" aria-label="Delete conversation" tabindex="-1">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>
-      </button>
-    </div>`;
+  li.innerHTML =
+    '<div class="conv-item active" data-conv="' + id + '" role="button" tabindex="0" aria-current="true" aria-label="New conversation">' +
+    '<div class="conv-icon">\u{1F4AC}</div>' +
+    '<div class="conv-meta"><div class="conv-title">New conversation</div><div class="conv-time">Just now</div></div>' +
+    '<button class="conv-del" aria-label="Delete conversation" tabindex="-1">' +
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>' +
+    '</button></div>';
   convList.insertBefore(li, convList.firstChild);
-
   activeConv = String(id);
-  clearConversation();
-  closeSidebar();
-  chatInput.focus();
-
+  clearConversation(); closeSidebar(); chatInput.focus();
   showToast('New conversation started');
 });
 
-/* ============================================================
-   CONVERSATION HISTORY — CLICK TO SWITCH
-============================================================ */
-document.addEventListener('click', e => {
-  const item = e.target.closest('.conv-item');
-  const del  = e.target.closest('.conv-del');
+function updateActiveConvTitle(text) {
+  const t = document.querySelector('.conv-item[data-conv="' + activeConv + '"] .conv-title');
+  if (t && text) t.textContent = text.length > 30 ? text.slice(0, 30) + '\u2026' : text;
+}
 
+document.addEventListener('click', e => {
+  const item = e.target.closest('.conv-item'); const del = e.target.closest('.conv-del');
   if (del) {
     e.stopPropagation();
     const li = del.closest('li');
     if (li) {
-      li.style.opacity = '0';
-      li.style.transform = 'translateX(-10px)';
+      li.style.opacity = '0'; li.style.transform = 'translateX(-10px)';
       li.style.transition = 'opacity 0.2s, transform 0.2s';
       setTimeout(() => li.remove(), 200);
       showToast('Conversation deleted');
     }
     return;
   }
-
   if (item) {
-    document.querySelectorAll('.conv-item').forEach(i => {
-      i.classList.remove('active');
-      i.removeAttribute('aria-current');
-    });
-    item.classList.add('active');
-    item.setAttribute('aria-current', 'true');
-    activeConv = item.dataset.conv;
-    closeSidebar();
-
-    /* In production: load actual conversation from state/API */
-    clearConversation();
-    showToast('Conversation loaded');
+    document.querySelectorAll('.conv-item').forEach(i => { i.classList.remove('active'); i.removeAttribute('aria-current'); });
+    item.classList.add('active'); item.setAttribute('aria-current', 'true');
+    activeConv = item.dataset.conv; closeSidebar();
+    clearConversation(); showToast('Conversation loaded');
   }
 });
 
-/* ============================================================
-   PROMPT CARDS (welcome screen)
-============================================================ */
 document.querySelectorAll('.prompt-card').forEach(card => {
   card.addEventListener('click', () => {
     chatInput.value = card.dataset.prompt;
@@ -1631,10 +1637,6 @@ document.querySelectorAll('.prompt-card').forEach(card => {
     handleSend();
   });
 });
-
-/* ============================================================
-   TOPIC CHIPS
-============================================================ */
 document.querySelectorAll('.topic-chip').forEach(chip => {
   chip.addEventListener('click', () => {
     chatInput.value = chip.dataset.topic;
@@ -1642,44 +1644,33 @@ document.querySelectorAll('.topic-chip').forEach(chip => {
     chatInput.focus();
   });
 });
-
-/* ============================================================
-   SUGGESTION CHIPS (delegated, since they're added dynamically)
-============================================================ */
 messagesInner.addEventListener('click', e => {
   const chip = e.target.closest('.msg-sug-chip');
-  if (chip) {
-    chatInput.value = chip.textContent;
-    chatInput.dispatchEvent(new Event('input'));
-    handleSend();
-  }
+  if (chip) { chatInput.value = chip.textContent; chatInput.dispatchEvent(new Event('input')); handleSend(); }
 });
-
-/* ============================================================
-   KEYBOARD: SIDEBAR CONV ITEMS
-============================================================ */
 document.addEventListener('keydown', e => {
   const item = e.target.closest('.conv-item');
-  if (item && (e.key === 'Enter' || e.key === ' ')) {
-    e.preventDefault();
-    item.click();
-  }
+  if (item && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); item.click(); }
 });
 
 /* ============================================================
-   AUTO-START FROM URL PARAM (?q=your+question)
+   BOOT: redeem session (handoff ?h=… OR walk-in via Turnstile)
 ============================================================ */
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
+  chatInput.disabled = true;  // re-enabled on session ready
   const params = new URLSearchParams(window.location.search);
-  const q = params.get('q');
-  if (q) {
-    chatInput.value = q;
-    chatInput.dispatchEvent(new Event('input'));
-    setTimeout(() => handleSend(), 400);
-    /* Clean URL without reload */
-    history.replaceState(null, '', window.location.pathname);
+  const h = params.get('h');
+
+  if (h) {
+    try {
+      const data = await redeemSession({ ticket: h });
+      onSessionReady(data);
+      history.replaceState(null, '', window.location.pathname);
+    } catch (err) {
+      onSessionFailure();
+    }
   } else {
-    chatInput.focus();
+    showTurnstileGate();
   }
 });
 </script>
