@@ -9,8 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-
+  
   <style>
     /* ============================================================
        RESET + TOKENS
@@ -1025,15 +1024,6 @@
 <!-- Toast notification -->
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<!-- Kronos: Turnstile gate for walk-in sessions (hidden for handoff flow) -->
-<div class="kronos-gate" id="kronos-gate" aria-hidden="true" aria-labelledby="kronos-gate-title">
-  <div class="kronos-gate-card">
-    <div class="kronos-gate-title" id="kronos-gate-title">One quick check</div>
-    <div class="kronos-gate-sub">We just need to confirm you're not a bot before starting the chat.</div>
-    <div id="kronos-turnstile"></div>
-  </div>
-</div>
-
 <!-- Mobile sidebar overlay -->
 <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
 
@@ -1317,7 +1307,6 @@
 const KRONOS_API         = 'https://kronos-internal-dashboard.vercel.app';
 const PARTNER_KEY        = 'pk_keva_ai_6015e23ac71b148858c70d620a5f944c';
 const PARTNER_SLUG       = 'keva-ai';
-const TURNSTILE_SITE_KEY = '0x4AAAAAADCeIgB-1HG9fkYG';
 
 /* Persist session across refreshes: one slot per tenant */
 const SESSION_STORAGE_KEY  = 'kronos_partner_session_' + PARTNER_SLUG;
@@ -1588,30 +1577,15 @@ function onSessionFailure() {
 }
 
 /* ============================================================
-   TURNSTILE GATE (walk-in only)
+   WALK-IN START (Turnstile gate removed; see PR notes)
 ============================================================ */
-function showTurnstileGate() {
-  if (!gateEl) return;
-  gateEl.classList.add('visible');
-  gateEl.removeAttribute('aria-hidden');
-  const mount = document.getElementById('kronos-turnstile');
-  mount.innerHTML = '';
-  const renderWhenReady = () => {
-    if (!window.turnstile) { setTimeout(renderWhenReady, 150); return; }
-    window.turnstile.render(mount, {
-      sitekey: TURNSTILE_SITE_KEY,
-      theme: 'dark',
-      callback: async (token) => {
-        try {
-          const data = await redeemSession({ walkIn: true, turnstileToken: token });
-          onSessionReady(data);
-        } catch (err) {
-          onSessionFailure();
-        }
-      }
-    });
-  };
-  renderWhenReady();
+async function showTurnstileGate() {
+  try {
+    const data = await redeemSession({ walkIn: true });
+    onSessionReady(data);
+  } catch (err) {
+    onSessionFailure();
+  }
 }
 
 /* ============================================================
